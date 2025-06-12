@@ -777,22 +777,22 @@ const drawBackground = (ctx, canvas, colors, rng) => {
 
 // --- Texture Drawing ---
 const drawTextures = (ctx, canvas, rng) => {
-  // Randomized noise texture pattern
-  const noiseIntensity = rng.next(0.08, 0.15);
-  const noiseSize = rng.next(1, 3);
-  
-  ctx.save();
-  ctx.fillStyle = `rgba(255, 255, 255, ${noiseIntensity})`;
-  
-  for (let i = 0; i < canvas.width; i += Math.floor(rng.next(1, 4))) {
-    for (let j = 0; j < canvas.height; j += Math.floor(rng.next(1, 4))) {
-      if (rng.next() > 0.88) {
-        const size = rng.next() > 0.5 ? noiseSize : noiseSize * 2;
-        ctx.fillRect(i, j, size, size);
-      }
+// Noise
+const noiseIntensity = rng.next(0.03, 0.08); // Range: 3%-8% instead of 8%-15%
+const noiseSize = rng.next(1, 3);
+
+ctx.save();
+ctx.fillStyle = `rgba(255, 255, 255, ${noiseIntensity})`;
+
+for (let i = 0; i < canvas.width; i += Math.floor(rng.next(1, 4))) {
+  for (let j = 0; j < canvas.height; j += Math.floor(rng.next(1, 4))) {
+    if (rng.next() > 0.91) { // 9% frequency instead of 12%
+      const size = rng.next() > 0.5 ? noiseSize : noiseSize * 2;
+      ctx.fillRect(i, j, size, size);
     }
   }
-  ctx.restore();
+}
+ctx.restore();
 
   // Randomized texture lines
   const lineCount = Math.floor(rng.next(15, 35));
