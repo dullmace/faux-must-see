@@ -915,13 +915,13 @@ const ShareButtons = ({ band, token }) => {
     return tweetMessages[Math.floor(Math.random() * tweetMessages.length)];
   };
 
-const handleShare = async () => {
-    if (isGenerating) return;
-    setIsGenerating(true);
+  const handleShare = async () => {
+    if (isGeneratingImage) return; // Fixed: use correct state variable
+    setIsGeneratingImage(true); // Fixed: use correct setter
 
     try {
       const matchPercentage = Math.min(Math.round((band.score / 10) * 100), 100);
-      const shareText = getRandomMessage();
+      const shareText = getRandomTweetMessage(); // Fixed: use correct function name
 
       // We always generate the image first
       const imageBlob = await generateShareImage(band, matchPercentage, token);
@@ -973,12 +973,12 @@ const handleShare = async () => {
         "Whoops! Something went wrong. Please try copying the link instead.",
       );
     } finally {
-      setIsGenerating(false);
+      setIsGeneratingImage(false); // Fixed: use correct setter
     }
   };
 
   const handleCopyLink = async () => {
-    const shareText = getRandomMessage();
+    const shareText = getRandomTweetMessage(); // Fixed: use correct function name
     try {
       await navigator.clipboard.writeText(shareText);
       alert("Copied to clipboard!");
@@ -992,10 +992,10 @@ const handleShare = async () => {
     <div className="share-buttons">
       <button
         onClick={handleShare}
-        className="share-button twitter" // You can style this as the primary button
-        disabled={isGenerating}
+        className="share-button twitter"
+        disabled={isGeneratingImage} // Fixed: use correct state variable
       >
-        {isGenerating ? (
+        {isGeneratingImage ? ( // Fixed: use correct state variable
           <>
             <div className="creating-spinner"></div>
             Creating...
@@ -1014,8 +1014,6 @@ const handleShare = async () => {
     </div>
   );
 };
-
-export default ShareButtons;
 
 const TwinCard = ({ band, token }) => {
   const [playlistUrl, setPlaylistUrl] = useState(null);
