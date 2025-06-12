@@ -774,9 +774,9 @@ const generateShareImage = async (band, matchPercentage, token) => {
       ctx.font = "28px Arial, sans-serif";
       ctx.strokeStyle = "rgba(0, 0, 0, 0.9)";
       ctx.lineWidth = 4;
-      ctx.strokeText(`AT FAUX 8}`, centerX, centerY + 50);
+      ctx.strokeText(`AT FAUX 8`, centerX, centerY + 50);
       ctx.fillStyle = "#ffffff";
-      ctx.fillText(`AT FAUX 8}`, centerX, centerY + 50);
+      ctx.fillText(`AT FAUX 8`, centerX, centerY + 50);
 
       // Enhanced match percentage with cooler design
       const boxWidth = 320;
