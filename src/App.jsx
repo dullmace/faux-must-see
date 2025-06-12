@@ -20,22 +20,10 @@ const getRankedMatches = async (token, timeRange) => {
   const topArtistsData = await artistsRes.json();
   const topArtists = topArtistsData.items || [];
 
-  // Extract user genres for later use
-  const allUserGenres = topArtists.flatMap((artist) => artist.genres);
-  const genreCounts = {};
-  allUserGenres.forEach(genre => {
-    genreCounts[genre] = (genreCounts[genre] || 0) + 1;
-  });
-  const userTopGenres = Object.entries(genreCounts)
-    .sort(([,a], [,b]) => b - a)
-    .slice(0, 5)
-    .map(([genre]) => genre);
-
   const tracksRes = await fetch(
     `https://api.spotify.com/v1/me/top/tracks?limit=50&time_range=${timeRange}`,
     { headers: { Authorization: `Bearer ${token}` } }
   );
-  
   const topTracksData = await tracksRes.json();
   const topTracks = topTracksData.items || [];
 
@@ -45,7 +33,7 @@ const getRankedMatches = async (token, timeRange) => {
     valence: 0,
     acousticness: 0,
   };
-  
+
   if (topTracks.length > 0) {
     const trackIds = topTracks.map((track) => track.id).join(",");
     const featuresRes = await fetch(
@@ -111,11 +99,7 @@ const getRankedMatches = async (token, timeRange) => {
     return { ...band, score, reason };
   });
 
-  return {
-    matches: scoredBands.sort((a, b) => b.score - a.score),
-    userGenres: userTopGenres,
-    timeRange: timeRange
-  };
+  return scoredBands.sort((a, b) => b.score - a.score);
 };
 
 const loadImage = (src) => {
@@ -753,105 +737,6 @@ const generateShareImage = async (band, matchPercentage, token, userProfile = nu
 
       drawSoundWaves();
       drawMusicNotes();
-      
-      // Load and draw user profile image and name
-      if (userProfile) {
-        try {
-          // Always show the username, even if no image
-          const userName = userProfile.display_name || userProfile.id;
-          
-          if (userProfile.images && userProfile.images.length > 0) {
-            // Try to load and show profile image
-            const userImage = await loadImage(userProfile.images[0].url);
-            if (userImage) {
-              const userImageSize = 80;
-              const userImageX = 60;
-              const userImageY = 60;
-
-              ctx.save();
-              
-              ctx.beginPath();
-              ctx.arc(userImageX, userImageY, userImageSize / 2, 0, Math.PI * 2);
-              ctx.clip();
-              
-              ctx.drawImage(
-                userImage, 
-                userImageX - userImageSize / 2, 
-                userImageY - userImageSize / 2, 
-                userImageSize, 
-                userImageSize
-              );
-              
-              ctx.restore();
-
-              ctx.strokeStyle = "#ffffff";
-              ctx.lineWidth = 3;
-              ctx.beginPath();
-              ctx.arc(userImageX, userImageY, userImageSize / 2 + 2, 0, Math.PI * 2);
-              ctx.stroke();
-
-              // Username below image
-              ctx.font = "600 18px Arial, sans-serif";
-              ctx.textAlign = "left";
-              ctx.strokeStyle = "rgba(0, 0, 0, 0.9)";
-              ctx.lineWidth = 3;
-              ctx.strokeText(`@${userName}`, 20, 130);
-              ctx.fillStyle = "#ffffff";
-              ctx.fillText(`@${userName}`, 20, 130);
-            } else {
-              // No image loaded, show username only with icon
-              ctx.font = "600 18px Arial, sans-serif";
-              ctx.textAlign = "left";
-              
-              // Draw a simple user icon
-              ctx.fillStyle = "rgba(255, 255, 255, 0.8)";
-              ctx.beginPath();
-              ctx.arc(40, 60, 25, 0, Math.PI * 2);
-              ctx.fill();
-              
-              ctx.fillStyle = "rgba(0, 0, 0, 0.7)";
-              ctx.font = "24px Arial, sans-serif";
-              ctx.textAlign = "center";
-              ctx.fillText("👤", 40, 68);
-              
-              // Username
-              ctx.font = "600 18px Arial, sans-serif";
-              ctx.textAlign = "left";
-              ctx.strokeStyle = "rgba(0, 0, 0, 0.9)";
-              ctx.lineWidth = 3;
-              ctx.strokeText(`@${userName}`, 20, 100);
-              ctx.fillStyle = "#ffffff";
-              ctx.fillText(`@${userName}`, 20, 100);
-            }
-          } else {
-            // No profile image available, show username only with icon
-            ctx.font = "600 18px Arial, sans-serif";
-            ctx.textAlign = "left";
-            
-            // Draw a simple user icon
-            ctx.fillStyle = "rgba(255, 255, 255, 0.8)";
-            ctx.beginPath();
-            ctx.arc(40, 60, 25, 0, Math.PI * 2);
-            ctx.fill();
-            
-            ctx.fillStyle = "rgba(0, 0, 0, 0.7)";
-            ctx.font = "24px Arial, sans-serif";
-            ctx.textAlign = "center";
-            ctx.fillText("👤", 40, 68);
-            
-            // Username
-            ctx.font = "600 18px Arial, sans-serif";
-            ctx.textAlign = "left";
-            ctx.strokeStyle = "rgba(0, 0, 0, 0.9)";
-            ctx.lineWidth = 3;
-            ctx.strokeText(`@${userName}`, 20, 100);
-            ctx.fillStyle = "#ffffff";
-            ctx.fillText(`@${userName}`, 20, 100);
-          }
-        } catch (userImageError) {
-          console.warn("User profile display failed:", userImageError);
-        }
-      }
 
       // Load and draw band image
       try {
@@ -1714,7 +1599,7 @@ const TwinCard = ({ band, token }) => {
   );
 };
 
-const ResultScreen = ({ matches, token, timeRange, userGenres }) => {
+const ResultScreen = ({ matches, token }) => {
   const [displayedMatchIndex, setDisplayedMatchIndex] = useState(0);
   const [showAllRunners, setShowAllRunners] = useState(false);
 
@@ -1764,7 +1649,7 @@ const ResultScreen = ({ matches, token, timeRange, userGenres }) => {
         <h2 className="result-title">You should also check out...</h2>
       )}
 
-      <TwinCard band={currentTwin} token={token} timeRange={timeRange} userGenres={userGenres} />
+      <TwinCard band={currentTwin} token={token} />
 
       {isAlreadyFan && displayedMatchIndex === 0 && (
         <button onClick={handleFindNewTwin} className="discovery-button">
@@ -1908,10 +1793,8 @@ function App() {
   const startAnalysis = (timeRange) => {
     if (token) {
       setView("analyzing");
-      getRankedMatches(token, timeRange).then((result) => {
-        setMatches(result.matches);
-        setUserGenres(result.userGenres);
-        setTimeRange(result.timeRange);
+      getRankedMatches(token, timeRange).then((rankedMatches) => {
+        setMatches(rankedMatches);
         setView("results");
       });
     } else {
