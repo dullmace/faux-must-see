@@ -700,9 +700,9 @@ const generateShareImage = async (band, matchPercentage, token, userProfile = nu
           ctx.textAlign = "left";
           ctx.strokeStyle = "rgba(0, 0, 0, 0.9)";
           ctx.lineWidth = 3;
-          ctx.strokeText(`@${userProfile.display_name || userProfile.id}`, 20, 130);
+          ctx.strokeText(selectedHype, centerX, 140);
           ctx.fillStyle = "#ffffff";
-          ctx.fillText(`@${userProfile.display_name || userProfile.id}`, 20, 130);
+          ctx.fillText(selectedHype, centerX, 140);
         }
       }
 
@@ -900,8 +900,8 @@ const generateShareImage = async (band, matchPercentage, token, userProfile = nu
       ctx.lineWidth = 2;
       
       ctx.beginPath();
-      ctx.moveTo(centerX - 120, 190);
-      ctx.lineTo(centerX + 120, 190);
+      ctx.moveTo(centerX - 120, 170); // moved up from 190
+      ctx.lineTo(centerX + 120, 170); // moved up from 190
       ctx.stroke();
       
       ctx.beginPath();
@@ -1037,37 +1037,39 @@ const ShareButtons = ({ band, token }) => {
     `Brace yourselves, because I'm about to go full goblin mode for ${band.name} at Faux. Find your destiny: ${shareUrl}`,
     `This weekend, my heart belongs to ${band.name} at Faux. Who's got your heart? Find out: ${shareUrl}`,
     `I'm ready to shed a single tear (or maybe a lot) during ${band.name}'s set at Faux. Find your tear-jerker: ${shareUrl}`,
-    `Forget sleep, I'm running on pure adrenaline and the promise of ${band.name} at Faux. What's fueling you? Discover now: ${shareUrl}`,
-    `My inner monologue demands to see ${band.name} at Faux. Listen to your own inner voice: ${shareUrl}`,
-    `Pretty sure I'm about to get my mind blown (and probably my ears) by ${band.name} at Faux. Who's gonna blow your mind?: ${shareUrl}`,
-    `My Spotify just prescribed me a heavy dose of ${band.name} at Faux. Get your own sonic prescription: ${shareUrl}`,
-    `If you see me aggressively pointing at ${band.name} on stage, mind your business. Find your own reason to point: ${shareUrl}`,
-    `Pretty sure I'm about to achieve peak catharsis during ${band.name}'s set at Faux. Who's gonna save your soul? Find out: ${shareUrl}`,
-    `Pretty sure my entire existence has been leading to ${band.name} at Faux. Find your destiny: ${shareUrl}`
+    `Forget sleep, I'm running on pure adrenaline and the promise of ${band.name} at Faux. What's fueling you? Discover now: ${shareUrl}`
   ];
 
   const getRandomTweetMessage = () => {
     return tweetMessages[Math.floor(Math.random() * tweetMessages.length)];
   };
 
-  const generateTweetAndImage = async () => {
-    if (isGeneratingImage) return;
-    setIsGeneratingImage(true);
+  // Generate tweet automatically on component mount
+  useEffect(() => {
+    const generateInitialContent = async () => {
+      setIsGeneratingImage(true);
+      try {
+        const randomTweet = getRandomTweetMessage();
+        setTweetText(randomTweet);
 
-    try {
-      const matchPercentage = Math.min(Math.round((band.score / 10) * 100), 100);
-      const randomTweet = getRandomTweetMessage();
-      setTweetText(randomTweet);
-
-      const imageBlob = await generateShareImage(band, matchPercentage, token);
-      if (imageBlob) {
-        setShareImageBlob(imageBlob);
+        const matchPercentage = Math.min(Math.round((band.score / 10) * 100), 100);
+        const imageBlob = await generateShareImage(band, matchPercentage, token);
+        if (imageBlob) {
+          setShareImageBlob(imageBlob);
+        }
+      } catch (error) {
+        console.error("Error generating initial content:", error);
+      } finally {
+        setIsGeneratingImage(false);
       }
-    } catch (error) {
-      console.error("Error generating tweet and image:", error);
-    } finally {
-      setIsGeneratingImage(false);
-    }
+    };
+
+    generateInitialContent();
+  }, [band, token]);
+
+  const regenerateTweet = () => {
+    const newTweet = getRandomTweetMessage();
+    setTweetText(newTweet);
   };
 
   const handleTweet = () => {
@@ -1097,7 +1099,6 @@ const ShareButtons = ({ band, token }) => {
     if (!tweetText) return;
     try {
       await navigator.clipboard.writeText(tweetText);
-      // You could add a toast notification here
       alert("Tweet copied to clipboard!");
     } catch (error) {
       console.error("Failed to copy:", error);
@@ -1107,41 +1108,41 @@ const ShareButtons = ({ band, token }) => {
 
   return (
     <div className="share-section">
-      {!tweetText ? (
-        <button
-          onClick={generateTweetAndImage}
-          className="generate-share-button"
-          disabled={isGeneratingImage}
-        >
-          {isGeneratingImage ? (
-            <>
-              <div className="creating-spinner"></div>
-              Generating your share...
-            </>
-          ) : (
-            <>
-              <span className="share-icon">✨</span>
-              Generate My Share
-            </>
-          )}
-        </button>
+      {isGeneratingImage ? (
+        <div className="generating-content">
+          <div className="creating-spinner"></div>
+          <p>Generating your share content...</p>
+        </div>
       ) : (
         <div className="share-content">
           <div className="tweet-preview">
             <div className="tweet-header">
-              <span className="twitter-icon">🐦</span>
-              <span className="tweet-label">Your Tweet</span>
+              <svg className="twitter-icon" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/>
+              </svg>
+              <span className="tweet-label">Ready to Tweet</span>
+              <button onClick={regenerateTweet} className="regenerate-mini-button" title="Generate new tweet">
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/>
+                </svg>
+              </button>
             </div>
-            <div className="tweet-text">
-              {tweetText}
+            <div className="tweet-content">
+              <div className="tweet-text">
+                {tweetText}
+              </div>
             </div>
             <div className="tweet-actions">
               <button onClick={handleTweet} className="tweet-button">
-                <span className="tweet-icon">🚀</span>
+                <svg className="tweet-icon" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/>
+                </svg>
                 Tweet This
               </button>
               <button onClick={handleCopyTweet} className="copy-tweet-button">
-                <span className="copy-icon">📋</span>
+                <svg className="copy-icon" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
+                </svg>
                 Copy Text
               </button>
             </div>
@@ -1149,7 +1150,9 @@ const ShareButtons = ({ band, token }) => {
 
           <div className="image-instructions">
             <div className="instruction-header">
-              <span className="image-icon">🖼️</span>
+              <svg className="image-icon" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/>
+              </svg>
               <span className="instruction-label">Add Your Share Image</span>
             </div>
             <p className="instruction-text">
@@ -1160,21 +1163,12 @@ const ShareButtons = ({ band, token }) => {
               className="save-image-button"
               disabled={!shareImageBlob}
             >
-              <span className="download-icon">💾</span>
+              <svg className="download-icon" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/>
+              </svg>
               Save Image
             </button>
           </div>
-
-          <button
-            onClick={() => {
-              setTweetText('');
-              setShareImageBlob(null);
-            }}
-            className="regenerate-button"
-          >
-            <span className="refresh-icon">🔄</span>
-            Generate New Tweet
-          </button>
         </div>
       )}
     </div>
