@@ -20,10 +20,22 @@ const getRankedMatches = async (token, timeRange) => {
   const topArtistsData = await artistsRes.json();
   const topArtists = topArtistsData.items || [];
 
+  // Extract user genres for later use
+  const allUserGenres = topArtists.flatMap((artist) => artist.genres);
+  const genreCounts = {};
+  allUserGenres.forEach(genre => {
+    genreCounts[genre] = (genreCounts[genre] || 0) + 1;
+  });
+  const userTopGenres = Object.entries(genreCounts)
+    .sort(([,a], [,b]) => b - a)
+    .slice(0, 5)
+    .map(([genre]) => genre);
+
   const tracksRes = await fetch(
     `https://api.spotify.com/v1/me/top/tracks?limit=50&time_range=${timeRange}`,
     { headers: { Authorization: `Bearer ${token}` } }
   );
+  
   const topTracksData = await tracksRes.json();
   const topTracks = topTracksData.items || [];
 
@@ -33,7 +45,7 @@ const getRankedMatches = async (token, timeRange) => {
     valence: 0,
     acousticness: 0,
   };
-
+  
   if (topTracks.length > 0) {
     const trackIds = topTracks.map((track) => track.id).join(",");
     const featuresRes = await fetch(
@@ -99,7 +111,11 @@ const getRankedMatches = async (token, timeRange) => {
     return { ...band, score, reason };
   });
 
-  return scoredBands.sort((a, b) => b.score - a.score);
+  return {
+    matches: scoredBands.sort((a, b) => b.score - a.score),
+    userGenres: userTopGenres,
+    timeRange: timeRange
+  };
 };
 
 const loadImage = (src) => {
@@ -1698,7 +1714,7 @@ const TwinCard = ({ band, token }) => {
   );
 };
 
-const ResultScreen = ({ matches, token }) => {
+const ResultScreen = ({ matches, token, timeRange, userGenres }) => {
   const [displayedMatchIndex, setDisplayedMatchIndex] = useState(0);
   const [showAllRunners, setShowAllRunners] = useState(false);
 
@@ -1748,7 +1764,7 @@ const ResultScreen = ({ matches, token }) => {
         <h2 className="result-title">You should also check out...</h2>
       )}
 
-      <TwinCard band={currentTwin} token={token} />
+      <TwinCard band={currentTwin} token={token} timeRange={timeRange} userGenres={userGenres} />
 
       {isAlreadyFan && displayedMatchIndex === 0 && (
         <button onClick={handleFindNewTwin} className="discovery-button">
@@ -1892,8 +1908,10 @@ function App() {
   const startAnalysis = (timeRange) => {
     if (token) {
       setView("analyzing");
-      getRankedMatches(token, timeRange).then((rankedMatches) => {
-        setMatches(rankedMatches);
+      getRankedMatches(token, timeRange).then((result) => {
+        setMatches(result.matches);
+        setUserGenres(result.userGenres);
+        setTimeRange(result.timeRange);
         setView("results");
       });
     } else {
