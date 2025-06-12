@@ -1083,6 +1083,8 @@ const TwinCard = ({ band, token }) => {
   const [creatingPlaylist, setCreatingPlaylist] = useState(false);
   const [playlistError, setPlaylistError] = useState(null);
   const [coverUploadFailed, setCoverUploadFailed] = useState(false);
+  const [shareImageUrl, setShareImageUrl] = useState(null);
+  const [generatingShareImage, setGeneratingShareImage] = useState(true);
 
   if (!band) return null;
 
@@ -1096,6 +1098,32 @@ const TwinCard = ({ band, token }) => {
       (reason) =>
         reason.charAt(0).toUpperCase() + reason.slice(1).replace(".", "")
     );
+
+  // Generate share image on component mount
+  useEffect(() => {
+    const generateImage = async () => {
+      try {
+        const imageBlob = await generateShareImage(band, matchPercentage, token);
+        if (imageBlob) {
+          const imageUrl = URL.createObjectURL(imageBlob);
+          setShareImageUrl(imageUrl);
+        }
+      } catch (error) {
+        console.error("Error generating share image:", error);
+      } finally {
+        setGeneratingShareImage(false);
+      }
+    };
+
+    generateImage();
+
+    // Cleanup function to revoke object URL
+    return () => {
+      if (shareImageUrl) {
+        URL.revokeObjectURL(shareImageUrl);
+      }
+    };
+  }, [band, matchPercentage, token]);
 
   const handleCreatePlaylist = async () => {
     if (!token || creatingPlaylist) return;
@@ -1138,11 +1166,32 @@ const TwinCard = ({ band, token }) => {
       <img
         src={band.bandImage}
         alt={`Band photo of ${band.name}`}
-        className="band-image"
+        className="band-image-thumbnail"
       />
       <h1 className="band-name">{band.name}</h1>
       <p className="location">{band.bandLocation}</p>
       <GenreTags genres={band.bandGenre} />
+      
+      {/* Share image section */}
+      <div className="share-image-container">
+        {generatingShareImage ? (
+          <div className="share-image-loading">
+            <div className="creating-spinner"></div>
+            <p>Generating your share image...</p>
+          </div>
+        ) : shareImageUrl ? (
+          <img
+            src={shareImageUrl}
+            alt={`Share image for ${band.name}`}
+            className="generated-share-image"
+          />
+        ) : (
+          <div className="share-image-error">
+            <p>Share image couldn't be generated</p>
+          </div>
+        )}
+      </div>
+
       <div className="reason">
         <strong>Why you'll love them:</strong>
         <ul>
