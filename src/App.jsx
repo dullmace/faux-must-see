@@ -612,6 +612,54 @@ const generateShareImage = async (band, matchPercentage, token, userProfile = nu
         accent: { r: 255, g: 200, b: 50 }
       };
 
+      // Get user's top genres for personalization
+      let userTopGenres = [];
+      let artistSpotifyGenres = [];
+      
+      if (token) {
+        try {
+          // Get user's top genres
+          const artistsRes = await fetch(
+            `https://api.spotify.com/v1/me/top/artists?limit=20&time_range=medium_term`,
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
+          if (artistsRes.ok) {
+            const topArtistsData = await artistsRes.json();
+            const allGenres = topArtistsData.items?.flatMap(artist => artist.genres) || [];
+            // Get top 5 most common genres
+            const genreCounts = {};
+            allGenres.forEach(genre => {
+              genreCounts[genre] = (genreCounts[genre] || 0) + 1;
+            });
+            userTopGenres = Object.entries(genreCounts)
+              .sort(([,a], [,b]) => b - a)
+              .slice(0, 5)
+              .map(([genre]) => genre);
+          }
+
+          // Get artist's Spotify genres
+          if (band.spotifyLink) {
+            const spotifyId = band.spotifyLink.split("/").pop();
+            const artistRes = await fetch(
+              `https://api.spotify.com/v1/artists/${spotifyId}`,
+              { headers: { Authorization: `Bearer ${token}` } }
+            );
+            if (artistRes.ok) {
+              const artistData = await artistRes.json();
+              artistSpotifyGenres = artistData.genres || [];
+              console.log("Artist Spotify genres:", artistSpotifyGenres);
+            }
+          }
+        } catch (error) {
+          console.warn("Failed to fetch genres:", error);
+        }
+      }
+
+      // Combine JSON genres with Spotify genres for the artist
+      const jsonGenres = band.bandGenre ? band.bandGenre.split(' - ') : [];
+      const combinedArtistGenres = [...new Set([...jsonGenres, ...artistSpotifyGenres])];
+      console.log("Combined artist genres:", combinedArtistGenres);
+
       // Get colors from Spotify album art
       if (token && band.spotifyLink) {
         try {
@@ -693,6 +741,50 @@ const generateShareImage = async (band, matchPercentage, token, userProfile = nu
         ctx.restore();
       }
 
+      // === DYNAMIC VISUAL ELEMENTS ===
+      
+      // Add sound wave visualization
+      const drawSoundWaves = () => {
+        ctx.strokeStyle = `rgba(${colors.accent.r}, ${colors.accent.g}, ${colors.accent.b}, 0.4)`;
+        ctx.lineWidth = 2;
+        ctx.lineCap = "round";
+        
+        for (let i = 0; i < 5; i++) {
+          ctx.beginPath();
+          const baseY = 400 + (i * 12);
+          ctx.moveTo(50, baseY);
+          
+          for (let x = 50; x < canvas.width - 50; x += 8) {
+            const frequency = 0.02 + (i * 0.005);
+            const amplitude = (Math.sin((x + i * 30) * frequency) * (8 + i * 3)) + (Math.random() * 6 - 3);
+            ctx.lineTo(x, baseY + amplitude);
+          }
+          ctx.stroke();
+        }
+      };
+
+      // Add floating music notes
+      const drawMusicNotes = () => {
+        const notes = ['♪', '♫', '♬', '♩', '♭', '♯'];
+        ctx.font = "20px Arial";
+        ctx.textAlign = "center";
+        
+        for (let i = 0; i < 15; i++) {
+          const x = Math.random() * canvas.width;
+          const y = Math.random() * canvas.height;
+          const note = notes[Math.floor(Math.random() * notes.length)];
+          const opacity = 0.08 + Math.random() * 0.15;
+          const size = 16 + Math.random() * 8;
+          
+          ctx.font = `${size}px Arial`;
+          ctx.fillStyle = `rgba(255, 255, 255, ${opacity})`;
+          ctx.fillText(note, x, y);
+        }
+      };
+
+      drawSoundWaves();
+      drawMusicNotes();
+
       // Load and draw user profile image
       if (userProfile && userProfile.images && userProfile.images.length > 0) {
         try {
@@ -724,7 +816,7 @@ const generateShareImage = async (band, matchPercentage, token, userProfile = nu
             ctx.arc(userImageX, userImageY, userImageSize / 2 + 2, 0, Math.PI * 2);
             ctx.stroke();
 
-            ctx.font = "600 18px 'Oswald', sans-serif";
+            ctx.font = "600 18px Arial, sans-serif";
             ctx.textAlign = "left";
             ctx.strokeStyle = "rgba(0, 0, 0, 0.9)";
             ctx.lineWidth = 3;
@@ -736,6 +828,154 @@ const generateShareImage = async (band, matchPercentage, token, userProfile = nu
           console.warn("User image loading failed:", userImageError);
         }
       }
+
+      // === PERSONALIZATION ELEMENTS ===
+      
+      // Add user's music taste keywords
+      const addTasteKeywords = (userTopGenres) => {
+        if (userTopGenres.length > 0) {
+          ctx.font = "14px Arial, sans-serif";
+          ctx.textAlign = "left";
+          
+          // Create a semi-transparent background for the genre tags
+          const tagAreaX = 20;
+          const tagAreaY = 160;
+          const tagAreaWidth = 200;
+          const tagAreaHeight = userTopGenres.slice(0, 3).length * 25 + 20;
+          
+          ctx.fillStyle = "rgba(0, 0, 0, 0.3)";
+          ctx.fillRect(tagAreaX - 5, tagAreaY - 5, tagAreaWidth, tagAreaHeight);
+          
+          ctx.strokeStyle = `rgba(${colors.accent.r}, ${colors.accent.g}, ${colors.accent.b}, 0.5)`;
+          ctx.lineWidth = 1;
+          ctx.strokeRect(tagAreaX - 5, tagAreaY - 5, tagAreaWidth, tagAreaHeight);
+          
+          // Add "Your Taste:" label
+          ctx.font = "bold 12px Arial, sans-serif";
+          ctx.fillStyle = `rgba(${colors.accent.r}, ${colors.accent.g}, ${colors.accent.b}, 0.9)`;
+          ctx.fillText("YOUR TASTE:", tagAreaX, tagAreaY + 12);
+          
+          // Add genre tags
+          ctx.font = "12px Arial, sans-serif";
+          userTopGenres.slice(0, 3).forEach((genre, index) => {
+            const y = tagAreaY + 35 + (index * 20);
+            
+            // Genre tag background
+            const tagWidth = ctx.measureText(`#${genre}`).width + 12;
+            ctx.fillStyle = `rgba(${colors.secondary.r}, ${colors.secondary.g}, ${colors.secondary.b}, 0.3)`;
+            ctx.fillRect(tagAreaX, y - 12, tagWidth, 16);
+            
+            // Genre text
+            ctx.fillStyle = "rgba(255, 255, 255, 0.8)";
+            ctx.fillText(`#${genre}`, tagAreaX + 6, y);
+          });
+        }
+      };
+
+      // Add match breakdown visualization
+      const addMatchBreakdown = (matchPercentage) => {
+        const breakdownY = canvas.height - 120;
+        const barWidth = 300;
+        const barHeight = 12;
+        const barX = canvas.width - barWidth - 40;
+        
+        // Background bar
+        ctx.fillStyle = "rgba(0, 0, 0, 0.4)";
+        ctx.fillRect(barX, breakdownY, barWidth, barHeight);
+        
+        // Fill bar based on match percentage
+        const fillWidth = (matchPercentage / 100) * barWidth;
+        const barGradient = ctx.createLinearGradient(barX, 0, barX + barWidth, 0);
+        barGradient.addColorStop(0, `rgba(${colors.secondary.r}, ${colors.secondary.g}, ${colors.secondary.b}, 0.8)`);
+        barGradient.addColorStop(0.7, `rgba(${colors.accent.r}, ${colors.accent.g}, ${colors.accent.b}, 0.9)`);
+        barGradient.addColorStop(1, `rgba(${colors.primary.r}, ${colors.primary.g}, ${colors.primary.b}, 0.9)`);
+        
+        ctx.fillStyle = barGradient;
+        ctx.fillRect(barX, breakdownY, fillWidth, barHeight);
+        
+        // Add border
+        ctx.strokeStyle = "rgba(255, 255, 255, 0.3)";
+        ctx.lineWidth = 1;
+        ctx.strokeRect(barX, breakdownY, barWidth, barHeight);
+        
+        // Add label
+        ctx.font = "12px Arial, sans-serif";
+        ctx.fillStyle = "rgba(255, 255, 255, 0.7)";
+        ctx.textAlign = "right";
+        ctx.fillText("Music Compatibility", canvas.width - 40, breakdownY - 8);
+      };
+
+      // Add personalized music connection indicator using combined genres
+      const addMusicConnection = (userTopGenres, combinedArtistGenres) => {
+        // Find shared genres between user and artist (using both JSON and Spotify data)
+        const sharedGenres = userTopGenres.filter(userGenre => 
+          combinedArtistGenres.some(artistGenre => {
+            const userGenreLower = userGenre.toLowerCase();
+            const artistGenreLower = artistGenre.toLowerCase();
+            
+            // Check for exact matches or partial matches
+            return artistGenreLower.includes(userGenreLower) || 
+                   userGenreLower.includes(artistGenreLower) ||
+                   // Check for common genre keywords (existing ones)
+                   (userGenreLower.includes('rock') && artistGenreLower.includes('rock')) ||
+                   (userGenreLower.includes('pop') && artistGenreLower.includes('pop')) ||
+                   (userGenreLower.includes('indie') && artistGenreLower.includes('indie')) ||
+                   (userGenreLower.includes('electronic') && artistGenreLower.includes('electronic')) ||
+                   (userGenreLower.includes('metal') && artistGenreLower.includes('metal')) ||
+                   (userGenreLower.includes('punk') && artistGenreLower.includes('punk')) ||
+                   (userGenreLower.includes('folk') && artistGenreLower.includes('folk')) ||
+                   (userGenreLower.includes('jazz') && artistGenreLower.includes('jazz')) ||
+                   (userGenreLower.includes('hip hop') && artistGenreLower.includes('hip hop')) ||
+                   (userGenreLower.includes('alternative') && artistGenreLower.includes('alternative')) ||
+                   // NEW: Fest-specific genres
+                   (userGenreLower.includes('pop punk') && artistGenreLower.includes('pop punk')) ||
+                   (userGenreLower.includes('pop-punk') && artistGenreLower.includes('pop-punk')) ||
+                   (userGenreLower.includes('math rock') && artistGenreLower.includes('math rock')) ||
+                   (userGenreLower.includes('mathrock') && artistGenreLower.includes('mathrock')) ||
+                   (userGenreLower.includes('emo') && artistGenreLower.includes('emo')) ||
+                   (userGenreLower.includes('midwest emo') && artistGenreLower.includes('midwest emo')) ||
+                   (userGenreLower.includes('midwestemo') && artistGenreLower.includes('midwestemo')) ||
+                   // Cross-genre connections for these specific styles
+                   ((userGenreLower.includes('pop punk') || userGenreLower.includes('pop-punk')) && 
+                    (artistGenreLower.includes('punk') || artistGenreLower.includes('alternative'))) ||
+                   ((userGenreLower.includes('math rock') || userGenreLower.includes('mathrock')) && 
+                    (artistGenreLower.includes('indie rock') || artistGenreLower.includes('post rock'))) ||
+                   (userGenreLower.includes('emo') && 
+                    (artistGenreLower.includes('indie') || artistGenreLower.includes('alternative') || 
+                     artistGenreLower.includes('rock'))) ||
+                   ((userGenreLower.includes('midwest emo') || userGenreLower.includes('midwestemo')) && 
+                    (artistGenreLower.includes('emo') || artistGenreLower.includes('indie') || 
+                     artistGenreLower.includes('alternative')))
+          })
+        );
+        
+        console.log("Shared genres found:", sharedGenres);
+        
+        if (sharedGenres.length > 0) {
+          const connectionY = canvas.height - 80;
+          const connectionX = canvas.width - 40;
+          
+          ctx.font = "14px Arial, sans-serif";
+          ctx.textAlign = "right";
+          
+          const connectionText = sharedGenres.length === 1 
+            ? `Connected by ${sharedGenres[0]}` 
+            : `${sharedGenres.length} genre connections`;
+          
+          // Background for connection text
+          const textWidth = ctx.measureText(connectionText).width;
+          ctx.fillStyle = "rgba(0, 0, 0, 0.5)";
+          ctx.fillRect(connectionX - textWidth - 10, connectionY - 18, textWidth + 20, 24);
+          
+          ctx.fillStyle = `rgba(${colors.accent.r}, ${colors.accent.g}, ${colors.accent.b}, 0.9)`;
+          ctx.fillText(connectionText, connectionX - 5, connectionY - 2);
+        }
+      };
+
+      // Apply personalization elements
+      addTasteKeywords(userTopGenres);
+      addMatchBreakdown(matchPercentage);
+      addMusicConnection(userTopGenres, combinedArtistGenres);
 
       // Load and draw band image
       try {
@@ -847,21 +1087,21 @@ const generateShareImage = async (band, matchPercentage, token, userProfile = nu
       // Hype text (moved up from 160 to 140)
       ctx.strokeStyle = "rgba(0, 0, 0, 0.95)";
       ctx.lineWidth = 5;
-      ctx.font = "700 32px 'Oswald', sans-serif";
+      ctx.font = "700 32px Arial, sans-serif";
       ctx.strokeText(selectedHype, centerX, 140);
       
       ctx.fillStyle = "#ffffff";
       ctx.fillText(selectedHype, centerX, 140);
 
       // Band name
-      ctx.font = "400 84px 'Bebas Neue', sans-serif";
+      ctx.font = "400 84px Arial, sans-serif";
       let fontSize = 84;
       while (
         ctx.measureText(band.name.toUpperCase()).width > canvas.width - 500 &&
         fontSize > 36
       ) {
         fontSize -= 4;
-        ctx.font = `400 ${fontSize}px 'Bebas Neue', sans-serif`;
+        ctx.font = `400 ${fontSize}px Arial, sans-serif`;
       }
 
       ctx.strokeStyle = "rgba(0, 0, 0, 0.8)";
@@ -912,7 +1152,7 @@ const generateShareImage = async (band, matchPercentage, token, userProfile = nu
       ctx.lineWidth = 1;
       ctx.strokeRect(boxX + 2, boxY + 2, boxWidth - 4, boxHeight - 4);
 
-      ctx.font = "400 42px 'Anton', sans-serif";
+      ctx.font = "400 42px Arial, sans-serif";
       ctx.fillStyle = "#ffffff";
       ctx.fillText(`${matchPercentage}% MATCH`, centerX, centerY + 165);
 
@@ -927,14 +1167,14 @@ const generateShareImage = async (band, matchPercentage, token, userProfile = nu
       
       const selectedBottom = bottomTexts[Math.floor(Math.random() * bottomTexts.length)];
       
-      ctx.font = "500 24px 'Oswald', sans-serif";
+      ctx.font = "500 24px Arial, sans-serif";
       ctx.strokeStyle = "rgba(0, 0, 0, 0.9)";
       ctx.lineWidth = 4;
       ctx.strokeText(selectedBottom, canvas.width / 2, canvas.height - 80);
       ctx.fillStyle = "#ffffff";
       ctx.fillText(selectedBottom, canvas.width / 2, canvas.height - 80);
 
-      ctx.font = "400 38px 'Anton', sans-serif";
+      ctx.font = "400 38px Arial, sans-serif";
       ctx.strokeStyle = "rgba(0, 0, 0, 0.9)";
       ctx.lineWidth = 5;
       ctx.strokeText("dullmace.lol", canvas.width / 2, canvas.height - 35);
