@@ -612,7 +612,6 @@ const generateShareImage = async (band, matchPercentage, token, userProfile = nu
         accent: { r: 255, g: 200, b: 50 }
       };
 
-
       // Get colors from Spotify album art
       if (token && band.spotifyLink) {
         try {
@@ -626,37 +625,191 @@ const generateShareImage = async (band, matchPercentage, token, userProfile = nu
         }
       }
 
-      // Create radial gradient background
-      const gradient = ctx.createRadialGradient(
-        canvas.width * 0.3, canvas.width * 0.3, 0,
-        canvas.width * 0.7, canvas.height * 0.7, canvas.width
-      );
-      gradient.addColorStop(0, `rgba(${colors.primary.r}, ${colors.primary.g}, ${colors.primary.b}, 0.9)`);
-      gradient.addColorStop(0.3, `rgba(${colors.secondary.r}, ${colors.secondary.g}, ${colors.secondary.b}, 0.8)`);
-      gradient.addColorStop(0.6, `rgba(${colors.accent.r}, ${colors.accent.g}, ${colors.accent.b}, 0.85)`);
-      gradient.addColorStop(1, `rgba(${colors.primary.r * 0.8}, ${colors.primary.g * 0.8}, ${colors.primary.b * 0.8}, 0.9)`);
+      // === RANDOMIZATION SEED ===
+      // Create a unique seed based on band name + user + timestamp variation
+      const userSeed = userProfile ? userProfile.id : 'anonymous';
+      const timeSeed = Math.floor(Date.now() / (1000 * 60 * 30)); // Changes every 30 minutes
+      const bandSeed = band.name.toLowerCase().replace(/[^a-z0-9]/g, '');
+      const combinedSeed = `${bandSeed}-${userSeed}-${timeSeed}`;
+      
+      // Simple seeded random function
+      let seedValue = 0;
+      for (let i = 0; i < combinedSeed.length; i++) {
+        seedValue = ((seedValue << 5) - seedValue + combinedSeed.charCodeAt(i)) & 0xffffffff;
+      }
+      
+      const seededRandom = (min = 0, max = 1) => {
+        seedValue = (seedValue * 9301 + 49297) % 233280;
+        const rnd = seedValue / 233280;
+        return min + rnd * (max - min);
+      };
 
-      ctx.fillStyle = gradient;
+      // Define exclusion zones for important content
+      const getExclusionZones = () => {
+        const centerX = canvas.width / 2 - 100;
+        const centerY = canvas.height / 2 - 40;
+        
+        return [
+          // Main text area (center)
+          { x: centerX - 200, y: 100, width: 400, height: 300 },
+          
+          // Band image area (right side)
+          { x: canvas.width - 320, y: 140, width: 320, height: 320 },
+          
+          // Bottom text area
+          { x: 0, y: canvas.height - 120, width: canvas.width, height: 120 },
+          
+          // Match percentage box area
+          { x: centerX - 180, y: centerY + 90, width: 360, height: 120 }
+        ];
+      };
+
+      // Check if a position conflicts with exclusion zones
+      const isPositionSafe = (x, y, size, exclusionZones) => {
+        const margin = 20; // Extra buffer around exclusion zones
+        
+        for (const zone of exclusionZones) {
+          // Check if vinyl circle would overlap with exclusion zone (with margin)
+          const vinylLeft = x - size - margin;
+          const vinylRight = x + size + margin;
+          const vinylTop = y - size - margin;
+          const vinylBottom = y + size + margin;
+          
+          const zoneLeft = zone.x;
+          const zoneRight = zone.x + zone.width;
+          const zoneTop = zone.y;
+          const zoneBottom = zone.y + zone.height;
+          
+          // Check for overlap
+          if (vinylLeft < zoneRight && vinylRight > zoneLeft && 
+              vinylTop < zoneBottom && vinylBottom > zoneTop) {
+            return false;
+          }
+        }
+        return true;
+      };
+
+      // Smart vinyl placement function
+      const placeVinylsSafely = (vinylCount, exclusionZones) => {
+        const vinylPositions = [];
+        const maxAttempts = 50; // Prevent infinite loops
+        
+        for (let i = 0; i < vinylCount; i++) {
+          let attempts = 0;
+          let position = null;
+          
+          while (attempts < maxAttempts && !position) {
+            const size = seededRandom(25, 70);
+            const x = seededRandom(size + 20, canvas.width - size - 20);
+            const y = seededRandom(size + 20, canvas.height - size - 20);
+            
+            // Check if position is safe from exclusion zones
+            if (isPositionSafe(x, y, size, exclusionZones)) {
+              // Also check if it's not too close to other vinyls
+              let tooClose = false;
+              for (const existing of vinylPositions) {
+                const distance = Math.sqrt(Math.pow(x - existing.x, 2) + Math.pow(y - existing.y, 2));
+                const minDistance = size + existing.size + 10; // Minimum spacing
+                if (distance < minDistance) {
+                  tooClose = true;
+                  break;
+                }
+              }
+              
+              if (!tooClose) {
+                position = {
+                  x,
+                  y,
+                  size,
+                  opacity: seededRandom(0.3, 0.6),
+                  rotation: seededRandom(0, Math.PI * 2)
+                };
+              }
+            }
+            attempts++;
+          }
+          
+          if (position) {
+            vinylPositions.push(position);
+          }
+        }
+        
+        return vinylPositions;
+      };
+
+      // Randomize gradient direction and stops
+      const gradientVariations = [
+        // Radial variations
+        () => ctx.createRadialGradient(
+          canvas.width * seededRandom(0.2, 0.8), 
+          canvas.height * seededRandom(0.2, 0.8), 
+          0,
+          canvas.width * seededRandom(0.6, 1.2), 
+          canvas.height * seededRandom(0.6, 1.2), 
+          canvas.width * seededRandom(0.8, 1.4)
+        ),
+        // Linear variations
+        () => ctx.createLinearGradient(
+          seededRandom(0, canvas.width), 
+          seededRandom(0, canvas.height),
+          seededRandom(0, canvas.width), 
+          seededRandom(0, canvas.height)
+        ),
+        // Conic-like effect with multiple radials
+        () => {
+          const grad = ctx.createRadialGradient(
+            canvas.width * 0.5, canvas.height * 0.5, 0,
+            canvas.width * 0.5, canvas.height * 0.5, canvas.width * 0.8
+          );
+          return grad;
+        }
+      ];
+
+      const selectedGradient = gradientVariations[Math.floor(seededRandom(0, gradientVariations.length))]();
+      
+      // Randomize color stops
+      const stopPositions = [0, seededRandom(0.2, 0.4), seededRandom(0.5, 0.7), 1];
+      const colorOrder = [colors.primary, colors.secondary, colors.accent];
+      
+      // Shuffle colors based on seed
+      for (let i = colorOrder.length - 1; i > 0; i--) {
+        const j = Math.floor(seededRandom(0, i + 1));
+        [colorOrder[i], colorOrder[j]] = [colorOrder[j], colorOrder[i]];
+      }
+
+      selectedGradient.addColorStop(stopPositions[0], `rgba(${colorOrder[0].r}, ${colorOrder[0].g}, ${colorOrder[0].b}, ${seededRandom(0.8, 0.95)})`);
+      selectedGradient.addColorStop(stopPositions[1], `rgba(${colorOrder[1].r}, ${colorOrder[1].g}, ${colorOrder[1].b}, ${seededRandom(0.7, 0.9)})`);
+      selectedGradient.addColorStop(stopPositions[2], `rgba(${colorOrder[2].r}, ${colorOrder[2].g}, ${colorOrder[2].b}, ${seededRandom(0.8, 0.9)})`);
+      selectedGradient.addColorStop(stopPositions[3], `rgba(${colorOrder[0].r * 0.8}, ${colorOrder[0].g * 0.8}, ${colorOrder[0].b * 0.8}, ${seededRandom(0.85, 0.95)})`);
+
+      ctx.fillStyle = selectedGradient;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      // Add noise texture pattern
-      ctx.fillStyle = `rgba(255, 255, 255, 0.12)`;
-      for (let i = 0; i < canvas.width; i += 2) {
-        for (let j = 0; j < canvas.height; j += 2) {
-          if (Math.random() > 0.88) {
-            ctx.fillRect(i, j, Math.random() > 0.5 ? 1 : 2, Math.random() > 0.5 ? 1 : 2);
+      // Randomized noise texture pattern
+      const noiseIntensity = seededRandom(0.08, 0.15);
+      const noiseSize = seededRandom(1, 3);
+      ctx.fillStyle = `rgba(255, 255, 255, ${noiseIntensity})`;
+      
+      for (let i = 0; i < canvas.width; i += Math.floor(seededRandom(1, 4))) {
+        for (let j = 0; j < canvas.height; j += Math.floor(seededRandom(1, 4))) {
+          if (seededRandom() > 0.88) {
+            const size = seededRandom() > 0.5 ? noiseSize : noiseSize * 2;
+            ctx.fillRect(i, j, size, size);
           }
         }
       }
 
-      // Add random lines for texture
-      ctx.strokeStyle = `rgba(255, 255, 255, 0.06)`;
-      ctx.lineWidth = 1;
-      for (let i = 0; i < 20; i++) {
-        const startX = Math.random() * canvas.width;
-        const startY = Math.random() * canvas.height;
-        const length = 50 + Math.random() * 100;
-        const angle = Math.random() * Math.PI * 2;
+      // Randomized texture lines
+      const lineCount = Math.floor(seededRandom(15, 35));
+      const lineOpacity = seededRandom(0.04, 0.08);
+      ctx.strokeStyle = `rgba(255, 255, 255, ${lineOpacity})`;
+      ctx.lineWidth = seededRandom(0.5, 2);
+      
+      for (let i = 0; i < lineCount; i++) {
+        const startX = seededRandom(0, canvas.width);
+        const startY = seededRandom(0, canvas.height);
+        const length = seededRandom(30, 150);
+        const angle = seededRandom(0, Math.PI * 2);
         
         ctx.beginPath();
         ctx.moveTo(startX, startY);
@@ -664,74 +817,114 @@ const generateShareImage = async (band, matchPercentage, token, userProfile = nu
         ctx.stroke();
       }
 
-      // Add random dark circles for depth
-      ctx.fillStyle = `rgba(0, 0, 0, 0.08)`;
-      for (let i = 0; i < 15; i++) {
-        const x = Math.random() * canvas.width;
-        const y = Math.random() * canvas.height;
-        const size = 10 + Math.random() * 30;
+      // Randomized dark circles
+      const exclusionZones = getExclusionZones();
+      const darkCircleCount = Math.floor(seededRandom(10, 20));
+      const darkCircleOpacity = seededRandom(0.05, 0.12);
+      ctx.fillStyle = `rgba(0, 0, 0, ${darkCircleOpacity})`;
+      
+      for (let i = 0; i < darkCircleCount; i++) {
+        let attempts = 0;
+        let positioned = false;
         
-        ctx.save();
-        ctx.globalAlpha = 0.3;
-        ctx.beginPath();
-        ctx.arc(x, y, size, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.restore();
+        while (attempts < 30 && !positioned) {
+          const size = seededRandom(5, 40);
+          const x = seededRandom(size, canvas.width - size);
+          const y = seededRandom(size, canvas.height - size);
+          
+          if (isPositionSafe(x, y, size, exclusionZones)) {
+            ctx.save();
+            ctx.globalAlpha = seededRandom(0.2, 0.4);
+            ctx.beginPath();
+            ctx.arc(x, y, size, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+            positioned = true;
+          }
+          attempts++;
+        }
       }
 
-      // Add accent colored circles
-      ctx.fillStyle = `rgba(${colors.accent.r}, ${colors.accent.g}, ${colors.accent.b}, 0.15)`;
-      for (let i = 0; i < 8; i++) {
-        const x = Math.random() * canvas.width;
-        const y = Math.random() * canvas.height;
-        const size = 5 + Math.random() * 15;
+      // Randomized accent circles
+      const accentCircleCount = Math.floor(seededRandom(5, 12));
+      const accentColor = colorOrder[Math.floor(seededRandom(0, colorOrder.length))];
+      
+      for (let i = 0; i < accentCircleCount; i++) {
+        let attempts = 0;
+        let positioned = false;
         
-        ctx.save();
-        ctx.globalAlpha = 0.4;
-        ctx.beginPath();
-        ctx.arc(x, y, size, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.restore();
+        while (attempts < 30 && !positioned) {
+          const size = seededRandom(3, 20);
+          const x = seededRandom(size, canvas.width - size);
+          const y = seededRandom(size, canvas.height - size);
+          
+          if (isPositionSafe(x, y, size, exclusionZones)) {
+            ctx.save();
+            ctx.globalAlpha = seededRandom(0.3, 0.5);
+            ctx.fillStyle = `rgba(${accentColor.r}, ${accentColor.g}, ${accentColor.b}, ${seededRandom(0.1, 0.2)})`;
+            ctx.beginPath();
+            ctx.arc(x, y, size, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+            positioned = true;
+          }
+          attempts++;
+        }
       }
 
       // === DYNAMIC VISUAL ELEMENTS ===
       
-      // Add sound wave visualization
+      // Randomized sound wave visualization
       const drawSoundWaves = () => {
-        ctx.strokeStyle = `rgba(${colors.accent.r}, ${colors.accent.g}, ${colors.accent.b}, 0.4)`;
-        ctx.lineWidth = 2;
+        const waveColor = colorOrder[Math.floor(seededRandom(0, colorOrder.length))];
+        ctx.strokeStyle = `rgba(${waveColor.r}, ${waveColor.g}, ${waveColor.b}, ${seededRandom(0.3, 0.5)})`;
+        ctx.lineWidth = seededRandom(1, 3);
         ctx.lineCap = "round";
         
-        for (let i = 0; i < 5; i++) {
+        const waveCount = Math.floor(seededRandom(3, 7));
+        const baseY = seededRandom(380, 420);
+        
+        for (let i = 0; i < waveCount; i++) {
           ctx.beginPath();
-          const baseY = 400 + (i * 12);
-          ctx.moveTo(50, baseY);
+          const waveY = baseY + (i * seededRandom(8, 15));
+          ctx.moveTo(50, waveY);
           
-          for (let x = 50; x < canvas.width - 50; x += 8) {
-            const frequency = 0.02 + (i * 0.005);
-            const amplitude = (Math.sin((x + i * 30) * frequency) * (8 + i * 3)) + (Math.random() * 6 - 3);
-            ctx.lineTo(x, baseY + amplitude);
+          for (let x = 50; x < canvas.width - 50; x += Math.floor(seededRandom(6, 12))) {
+            const frequency = seededRandom(0.015, 0.025) + (i * 0.005);
+            const amplitude = (Math.sin((x + i * seededRandom(20, 40)) * frequency) * seededRandom(5, 12)) + (seededRandom(-4, 4));
+            ctx.lineTo(x, waveY + amplitude);
           }
           ctx.stroke();
         }
       };
 
-      // Add floating music notes
+      // Smart music note placement
       const drawMusicNotes = () => {
         const notes = ['♪', '♫', '♬', '♩', '♭', '♯'];
-        ctx.font = "20px Arial";
-        ctx.textAlign = "center";
+        const noteCount = Math.floor(seededRandom(10, 20));
         
-        for (let i = 0; i < 15; i++) {
-          const x = Math.random() * canvas.width;
-          const y = Math.random() * canvas.height;
-          const note = notes[Math.floor(Math.random() * notes.length)];
-          const opacity = 0.08 + Math.random() * 0.15;
-          const size = 16 + Math.random() * 8;
+        for (let i = 0; i < noteCount; i++) {
+          let attempts = 0;
+          let positioned = false;
           
-          ctx.font = `${size}px Arial`;
-          ctx.fillStyle = `rgba(255, 255, 255, ${opacity})`;
-          ctx.fillText(note, x, y);
+          while (attempts < 20 && !positioned) {
+            const x = seededRandom(0, canvas.width);
+            const y = seededRandom(0, canvas.height);
+            const size = seededRandom(14, 24);
+            
+            // Notes are smaller, so use a smaller buffer
+            if (isPositionSafe(x, y, size/2, exclusionZones)) {
+              const note = notes[Math.floor(seededRandom(0, notes.length))];
+              const opacity = seededRandom(0.05, 0.18);
+              
+              ctx.font = `${size}px Arial`;
+              ctx.textAlign = "center";
+              ctx.fillStyle = `rgba(255, 255, 255, ${opacity})`;
+              ctx.fillText(note, x, y);
+              positioned = true;
+            }
+            attempts++;
+          }
         }
       };
 
@@ -783,41 +976,52 @@ const generateShareImage = async (band, matchPercentage, token, userProfile = nu
         console.warn("Band image loading failed:", bandImageError);
       }
 
-      // Draw vinyl records as decorative elements
+      // Draw vinyl records as decorative elements with smart positioning
       const drawVinyl = (x, y, size, opacity, rotation = 0) => {
         ctx.save();
         ctx.globalAlpha = opacity;
         ctx.translate(x, y);
         ctx.rotate(rotation);
         
+        const vinylColor1 = colorOrder[Math.floor(seededRandom(0, colorOrder.length))];
+        const vinylColor2 = colorOrder[Math.floor(seededRandom(0, colorOrder.length))];
+        
         const vinylGradient = ctx.createRadialGradient(0, 0, 0, 0, 0, size);
-        vinylGradient.addColorStop(0, `rgba(${colors.secondary.r}, ${colors.secondary.g}, ${colors.secondary.b}, 0.3)`);
-        vinylGradient.addColorStop(1, `rgba(${colors.primary.r}, ${colors.primary.g}, ${colors.primary.b}, 0.2)`);
+        vinylGradient.addColorStop(0, `rgba(${vinylColor1.r}, ${vinylColor1.g}, ${vinylColor1.b}, 0.3)`);
+        vinylGradient.addColorStop(1, `rgba(${vinylColor2.r}, ${vinylColor2.g}, ${vinylColor2.b}, 0.2)`);
         
         ctx.fillStyle = vinylGradient;
         ctx.beginPath();
         ctx.arc(0, 0, size, 0, Math.PI * 2);
         ctx.fill();
 
-        for (let radius = size * 0.2; radius < size; radius += size * 0.08) {
-          ctx.strokeStyle = `rgba(255, 255, 255, ${0.3 - (radius / size) * 0.2})`;
+        const grooveCount = Math.floor(seededRandom(3, 8));
+        for (let i = 0; i < grooveCount; i++) {
+          const radius = size * (0.2 + (i / grooveCount) * 0.6);
+          ctx.strokeStyle = `rgba(255, 255, 255, ${seededRandom(0.1, 0.3)})`;
           ctx.lineWidth = 1;
           ctx.beginPath();
           ctx.arc(0, 0, radius, 0, Math.PI * 2);
           ctx.stroke();
         }
 
-        ctx.fillStyle = `rgba(${colors.accent.r}, ${colors.accent.g}, ${colors.accent.b}, 0.8)`;
+        const centerColor = colorOrder[Math.floor(seededRandom(0, colorOrder.length))];
+        ctx.fillStyle = `rgba(${centerColor.r}, ${centerColor.g}, ${centerColor.b}, ${seededRandom(0.6, 0.9)})`;
         ctx.beginPath();
-        ctx.arc(0, 0, size * 0.12, 0, Math.PI * 2);
+        ctx.arc(0, 0, size * seededRandom(0.08, 0.15), 0, Math.PI * 2);
         ctx.fill();
         
         ctx.restore();
       };
 
-      drawVinyl(200, 100, 60, 0.5, 0.3);
-      drawVinyl(canvas.width - 100, canvas.height - 100, 60, 0.5, -0.5);
-      drawVinyl(150, canvas.height - 80, 35, 0.4, 1.2);
+      // Smart vinyl record placement
+      const vinylCount = Math.floor(seededRandom(2, 5));
+      const vinylPositions = placeVinylsSafely(vinylCount, exclusionZones);
+
+      // Draw the safely positioned vinyl records
+      vinylPositions.forEach(vinyl => {
+        drawVinyl(vinyl.x, vinyl.y, vinyl.size, vinyl.opacity, vinyl.rotation);
+      });
 
       const centerX = canvas.width / 2 - 100;
       const centerY = canvas.height / 2 - 40;
