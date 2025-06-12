@@ -937,6 +937,30 @@ const generateShareImage = async (band, matchPercentage, token, userProfile = nu
         console.warn("Faux logo loading failed:", logoError);
       }
 
+      // Match percentage box
+      const boxWidth = 320;
+      const boxHeight = 80;
+      const boxX = centerX - boxWidth / 2;
+      const boxY = centerY + 110;
+
+      const boxGradient = ctx.createLinearGradient(boxX, boxY, boxX + boxWidth, boxY + boxHeight);
+      boxGradient.addColorStop(0, "rgba(0, 0, 0, 0.9)");
+      boxGradient.addColorStop(1, "rgba(0, 0, 0, 0.7)");
+      
+      ctx.fillStyle = boxGradient;
+      ctx.fillRect(boxX, boxY, boxWidth, boxHeight);
+      
+      ctx.strokeStyle = `rgba(${colors.accent.r}, ${colors.accent.g}, ${colors.accent.b}, 0.9)`;
+      ctx.lineWidth = 3;
+      ctx.strokeRect(boxX, boxY, boxWidth, boxHeight);
+      
+      ctx.strokeStyle = `rgba(${colors.accent.r}, ${colors.accent.g}, ${colors.accent.b}, 0.4)`;
+      ctx.lineWidth = 1;
+      ctx.strokeRect(boxX + 2, boxY + 2, boxWidth - 4, boxHeight - 4);
+
+      ctx.font = "400 42px Arial, sans-serif";
+      ctx.fillStyle = "#ffffff";
+      ctx.fillText(`${matchPercentage}% MATCH`, centerX, centerY + 165);
 
       const bottomTexts = [
         "Find your Faux must-see at",
