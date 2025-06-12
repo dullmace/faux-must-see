@@ -1421,6 +1421,8 @@ const TwinCard = ({ band, token }) => {
         )}
       </div>
 
+      <ShareButtons band={band} token={token} />
+        
       <div className="reason">
         <strong>Why you'll love them:</strong>
         <ul>
@@ -1484,7 +1486,6 @@ const TwinCard = ({ band, token }) => {
             {playlistError && <p className="playlist-error">{playlistError}</p>}
           </div>
         )}
-        <ShareButtons band={band} token={token} />
       </div>
     </div>
   );
