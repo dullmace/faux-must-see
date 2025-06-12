@@ -894,8 +894,75 @@ const GenreTags = ({ genres }) => (
 
 const ShareButtons = ({ band, token }) => { 
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
-  const shareText = `I should definitely see ${band.name} at Faux! 🎵 Find out which band you should see!`;
-  const shareUrl = window.location.origin;
+  const shareUrl = "https://dullmace.lol";
+  
+  // Random tweet messages
+  const tweetMessages = [
+    `I'm going to go SO hard for ${band.name} at Faux this weekend! Find out who you should lose it for: ${shareUrl}`,
+    `I'm gonna lose my shit for ${band.name}! See who the Faux fest gods say you need to see: ${shareUrl}`,
+    `Watch out for me in ${band.name}'s pit! Don't miss your own perfect Faux match: ${shareUrl}`,
+    `My Spotify just told me to prepare for a spiritual awakening with ${band.name} at Faux. Get your own destiny revealed: ${shareUrl}`,
+    `Pretty sure my soulmate is actually ${band.name}, and I'm seeing them at Faux! Discover your true fest love: ${shareUrl}`,
+    `Warning: May spontaneously combust during ${band.name}'s set at Faux. Who's gonna make you explode? Find out: ${shareUrl}`,
+    `My internal algorithm (and this site) says ${band.name} is about to own my entire weekend at Faux. Uncover your Faux must-see: ${shareUrl}`,
+    `Canceling all other plans to be front and center for ${band.name} at Faux. Who's your can't-miss act? See here: ${shareUrl}`,
+    `Just got my marching orders: ${band.name} is my Faux anthem. What's yours? Find out your perfect fest pairing: ${shareUrl}`,
+    `Prepare for maximum headbanging with ${band.name} at Faux. What band is calling your name? Get your match: ${shareUrl}`,
+    `My future involves a lot of sweat and ${band.name} at Faux. Who's your fest forecast looking like? Discover now: ${shareUrl}`
+  ];
+
+  const getRandomTweetMessage = () => {
+    return tweetMessages[Math.floor(Math.random() * tweetMessages.length)];
+  };
+
+  const handleTwitterShare = async () => {
+    setIsGeneratingImage(true);
+    
+    try {
+      const matchPercentage = Math.min(Math.round((band.score / 10) * 100), 100);
+      const imageBlob = await generateShareImage(band, matchPercentage, token);
+      
+      const tweetText = getRandomTweetMessage();
+      
+      if (imageBlob && navigator.share && navigator.canShare && navigator.canShare({ files: [new File([imageBlob], 'faux-share.png', { type: 'image/png' })] })) {
+        // Native share with image
+        const file = new File([imageBlob], `faux-${band.name.replace(/[^a-z0-9]/gi, '-').toLowerCase()}.png`, { type: 'image/png' });
+        await navigator.share({
+          title: "My Faux Must-See",
+          text: tweetText,
+          files: [file]
+        });
+      } else if (imageBlob) {
+        // Download image and open Twitter with text
+        const url = URL.createObjectURL(imageBlob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `faux-${band.name.replace(/[^a-z0-9]/gi, '-').toLowerCase()}.png`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        
+        // Open Twitter with the text
+        const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}`;
+        window.open(twitterUrl, '_blank');
+        
+        alert("Image downloaded! Upload it to your tweet for maximum impact! 🎵");
+      } else {
+        // Fallback to text-only tweet
+        const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}`;
+        window.open(twitterUrl, '_blank');
+      }
+    } catch (error) {
+      console.error('Error generating Twitter share:', error);
+      // Fallback to text-only tweet
+      const tweetText = getRandomTweetMessage();
+      const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}`;
+      window.open(twitterUrl, '_blank');
+    } finally {
+      setIsGeneratingImage(false);
+    }
+  };
   
   const handleImageShare = async () => {
     if (isGeneratingImage) return;
@@ -913,10 +980,10 @@ const ShareButtons = ({ band, token }) => {
       if (navigator.share && navigator.canShare && navigator.canShare({ files: [new File([imageBlob], 'faux-share.png', { type: 'image/png' })] })) {
         // Native share with image
         const file = new File([imageBlob], 'my-faux-must-see.png', { type: 'image/png' });
+        const shareText = getRandomTweetMessage();
         await navigator.share({
           title: "My Faux Must-See",
           text: shareText,
-          url: shareUrl,
           files: [file]
         });
       } else {
@@ -931,9 +998,10 @@ const ShareButtons = ({ band, token }) => {
         URL.revokeObjectURL(url);
         
         // Also copy text to clipboard
+        const shareText = getRandomTweetMessage();
         if (navigator.clipboard) {
-          await navigator.clipboard.writeText(`${shareText} ${shareUrl}`);
-          alert("Image downloaded and link copied to clipboard!");
+          await navigator.clipboard.writeText(shareText);
+          alert("Image downloaded and text copied to clipboard!");
         } else {
           alert("Image downloaded! Share it with your friends.");
         }
@@ -948,36 +1016,43 @@ const ShareButtons = ({ band, token }) => {
   };
 
   const handleTextShare = async () => {
+    const shareText = getRandomTweetMessage();
+    
     if (navigator.share) {
       try {
         await navigator.share({
           title: "My Faux Must-See",
           text: shareText,
-          url: shareUrl,
         });
       } catch (error) {
         console.log("Share cancelled");
       }
     } else {
       // Fallback: copy to clipboard
-      navigator.clipboard.writeText(`${shareText} ${shareUrl}`);
+      navigator.clipboard.writeText(shareText);
       alert("Link copied to clipboard!");
     }
   };
 
   return (
     <div className="share-buttons">
-      <a
-        href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(
-          shareText
-        )}&url=${encodeURIComponent(shareUrl)}`}
-        target="_blank"
-        rel="noopener noreferrer"
+      <button 
+        onClick={handleTwitterShare}
         className="share-button twitter"
+        disabled={isGeneratingImage}
       >
-        <span className="share-icon">🐦</span>
-        Twitter
-      </a>
+        {isGeneratingImage ? (
+          <>
+            <div className="creating-spinner"></div>
+            Creating...
+          </>
+        ) : (
+          <>
+            <span className="share-icon">🐦</span>
+            Tweet This
+          </>
+        )}
+      </button>
       <button 
         onClick={handleImageShare} 
         className="share-button image"
