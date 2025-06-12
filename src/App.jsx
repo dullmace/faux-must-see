@@ -1473,15 +1473,6 @@ const TwinCard = ({ band, token }) => {
         </div>
       </div>
       
-      {/* Move image above name and make smaller */}
-      <div className="band-image-main">
-        <img
-          src={band.bandImage}
-          alt={`Band photo of ${band.name}`}
-          className="band-image-hero"
-        />
-      </div>
-      
       <h1 className="band-name">{band.name}</h1>
       <p className="location">{band.bandLocation}</p>
       
@@ -1515,7 +1506,11 @@ const TwinCard = ({ band, token }) => {
           ))}
         </ul>
       </div>
-
+      <img
+        src={band.bandImage}
+        alt={`Band photo of ${band.name}`}
+        className="band-image-corner"
+      />
       {/* NEW: Stylized Genre Section */}
       <div className="genre-connection-section">
         <div className="genre-grid">
