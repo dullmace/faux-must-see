@@ -604,25 +604,43 @@ const generateShareImage = async (band, matchPercentage, token) => {
         }
       }
 
-      // Bright, vibrant gradient
-      const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
-      gradient.addColorStop(0, `rgba(${colors.primary.r}, ${colors.primary.g}, ${colors.primary.b}, 0.85)`);
-      gradient.addColorStop(0.3, `rgba(${colors.secondary.r}, ${colors.secondary.g}, ${colors.secondary.b}, 0.9)`);
-      gradient.addColorStop(0.7, `rgba(${colors.accent.r}, ${colors.accent.g}, ${colors.accent.b}, 0.8)`);
-      gradient.addColorStop(1, `rgba(${colors.primary.r}, ${colors.primary.g}, ${colors.primary.b}, 0.75)`);
+      // Create a more dynamic gradient with multiple stops
+      const gradient = ctx.createRadialGradient(
+        canvas.width * 0.3, canvas.height * 0.3, 0,
+        canvas.width * 0.7, canvas.height * 0.7, canvas.width
+      );
+      gradient.addColorStop(0, `rgba(${colors.primary.r}, ${colors.primary.g}, ${colors.primary.b}, 0.9)`);
+      gradient.addColorStop(0.3, `rgba(${colors.secondary.r}, ${colors.secondary.g}, ${colors.secondary.b}, 0.8)`);
+      gradient.addColorStop(0.6, `rgba(${colors.accent.r}, ${colors.accent.g}, ${colors.accent.b}, 0.85)`);
+      gradient.addColorStop(1, `rgba(${colors.primary.r * 0.8}, ${colors.primary.g * 0.8}, ${colors.primary.b * 0.8}, 0.9)`);
 
       ctx.fillStyle = gradient;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      // Load and draw band image
+      // Add some noise/texture for that DIY aesthetic
+      ctx.fillStyle = `rgba(255, 255, 255, 0.08)`;
+      for (let i = 0; i < canvas.width; i += 3) {
+        for (let j = 0; j < canvas.height; j += 3) {
+          if (Math.random() > 0.92) {
+            ctx.fillRect(i, j, 2, 2);
+          }
+        }
+      }
+
+      // Load and draw band image with cooler styling
       const bandImage = await loadImage(band.bandImage);
       if (bandImage) {
-        // Create circular clipping mask for band image
-        const imageSize = 180;
-        const imageX = canvas.width - 220; // Position on right side
-        const imageY = 180;
+        const imageSize = 200;
+        const imageX = canvas.width - 240;
+        const imageY = 200;
 
         ctx.save();
+        
+        // Add a glowing effect behind the image
+        ctx.shadowColor = `rgba(${colors.accent.r}, ${colors.accent.g}, ${colors.accent.b}, 0.6)`;
+        ctx.shadowBlur = 20;
+        ctx.shadowOffsetX = 0;
+        ctx.shadowOffsetY = 0;
         
         // Create circular clip
         ctx.beginPath();
@@ -640,152 +658,186 @@ const generateShareImage = async (band, matchPercentage, token) => {
         
         ctx.restore();
 
-        // Add stylish border around the image
+        // Add multiple stylish borders
         ctx.strokeStyle = "#ffffff";
-        ctx.lineWidth = 6;
+        ctx.lineWidth = 4;
         ctx.beginPath();
-        ctx.arc(imageX, imageY, imageSize / 2 + 3, 0, Math.PI * 2);
+        ctx.arc(imageX, imageY, imageSize / 2 + 2, 0, Math.PI * 2);
         ctx.stroke();
 
-        // Add colored accent border
-        ctx.strokeStyle = `rgb(${colors.accent.r}, ${colors.accent.g}, ${colors.accent.b})`;
-        ctx.lineWidth = 3;
+        ctx.strokeStyle = `rgba(${colors.accent.r}, ${colors.accent.g}, ${colors.accent.b}, 0.8)`;
+        ctx.lineWidth = 2;
         ctx.beginPath();
         ctx.arc(imageX, imageY, imageSize / 2 + 8, 0, Math.PI * 2);
         ctx.stroke();
-
-        // Add subtle shadow/glow effect
-        ctx.save();
-        ctx.globalAlpha = 0.3;
-        ctx.fillStyle = `rgb(${colors.primary.r}, ${colors.primary.g}, ${colors.primary.b})`;
-        ctx.beginPath();
-        ctx.arc(imageX + 2, imageY + 2, imageSize / 2 + 12, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.restore();
       }
 
-      // Bright pattern overlay (adjusted to not overlap with image)
-      ctx.fillStyle = `rgba(255, 255, 255, 0.15)`;
-      for (let i = 0; i < canvas.width - 250; i += 30) { // Reduced width to avoid image area
-        for (let j = 0; j < canvas.height; j += 30) {
-          if (Math.random() > 0.8) {
-            ctx.fillRect(i, j, 4, 4);
-          }
-        }
-      }
-
-      // Bright vinyl records (repositioned to work with image)
-      const drawVinyl = (x, y, size, opacity) => {
+      // Enhanced vinyl records with better positioning
+      const drawVinyl = (x, y, size, opacity, rotation = 0) => {
         ctx.save();
         ctx.globalAlpha = opacity;
+        ctx.translate(x, y);
+        ctx.rotate(rotation);
         
-        // Bright vinyl base
-        ctx.fillStyle = `rgba(255, 255, 255, 0.25)`;
+        // Vinyl base with gradient
+        const vinylGradient = ctx.createRadialGradient(0, 0, 0, 0, 0, size);
+        vinylGradient.addColorStop(0, `rgba(${colors.secondary.r}, ${colors.secondary.g}, ${colors.secondary.b}, 0.3)`);
+        vinylGradient.addColorStop(1, `rgba(${colors.primary.r}, ${colors.primary.g}, ${colors.primary.b}, 0.2)`);
+        
+        ctx.fillStyle = vinylGradient;
         ctx.beginPath();
-        ctx.arc(x, y, size, 0, Math.PI * 2);
+        ctx.arc(0, 0, size, 0, Math.PI * 2);
         ctx.fill();
 
-        // Colorful grooves
-        ctx.strokeStyle = `rgba(${colors.accent.r}, ${colors.accent.g}, ${colors.accent.b}, 0.6)`;
-        ctx.lineWidth = 2;
-        for (let radius = size * 0.3; radius < size; radius += size * 0.12) {
+        // Multiple grooves with varying opacity
+        for (let radius = size * 0.2; radius < size; radius += size * 0.08) {
+          ctx.strokeStyle = `rgba(255, 255, 255, ${0.3 - (radius / size) * 0.2})`;
+          ctx.lineWidth = 1;
           ctx.beginPath();
-          ctx.arc(x, y, radius, 0, Math.PI * 2);
+          ctx.arc(0, 0, radius, 0, Math.PI * 2);
           ctx.stroke();
         }
 
-        // Bright center
-        ctx.fillStyle = `rgb(${colors.secondary.r}, ${colors.secondary.g}, ${colors.secondary.b})`;
+        // Center with accent color
+        ctx.fillStyle = `rgba(${colors.accent.r}, ${colors.accent.g}, ${colors.accent.b}, 0.8)`;
         ctx.beginPath();
-        ctx.arc(x, y, size * 0.15, 0, Math.PI * 2);
+        ctx.arc(0, 0, size * 0.12, 0, Math.PI * 2);
         ctx.fill();
+        
         ctx.restore();
       };
 
-      drawVinyl(120, 120, 90, 0.7);
-      drawVinyl(canvas.width - 120, canvas.height - 120, 70, 0.6);
-      drawVinyl(200, canvas.height - 80, 40, 0.5); // Moved third vinyl to avoid image
+      drawVinyl(100, 100, 80, 0.6, 0.3);
+      drawVinyl(canvas.width - 100, canvas.height - 100, 60, 0.5, -0.5);
+      drawVinyl(150, canvas.height - 80, 35, 0.4, 1.2);
 
-      const centerX = canvas.width / 2 - 50; // Shift text slightly left to balance with image
+      const centerX = canvas.width / 2 - 80;
       const centerY = canvas.height / 2;
 
       ctx.miterLimit = 2;
       ctx.lineJoin = "round";
       ctx.lineCap = "round";
       
-      // Title with maximum contrast
+      // Better hype phrases that actually make sense
+      const hypeTexts = [
+        "CANCELING ALL PLANS FOR",
+        "FRONT ROW READY FOR",
+        "MY FAUX MUST-SEE:",
+        "DON'T SLEEP ON",
+        "ABOUT TO GO SO HARD FOR",
+        "GONNA LOSE MY SHIT FOR",
+        "PREPARE FOR SPIRITUAL AWAKENING WITH",
+        "MY SOULMATE IS ACTUALLY",
+        "WARNING: MAY COMBUST DURING",
+        "FUTURE INVOLVES SWEAT AND"
+      ];
+      
+      const selectedHype = hypeTexts[Math.floor(Math.random() * hypeTexts.length)];
+      
+      // Hype text with maximum contrast
       ctx.textAlign = "center";
       
-      // Strong black outline
-      ctx.strokeStyle = "rgba(0, 0, 0, 0.9)";
-      ctx.lineWidth = 6;
-      ctx.font = "bold 48px Arial, sans-serif";
-      ctx.strokeText("MY FAUX MUST-SEE", centerX, 120);
+      ctx.strokeStyle = "rgba(0, 0, 0, 0.95)";
+      ctx.lineWidth = 5;
+      ctx.font = "bold 32px Arial, sans-serif";
+      ctx.strokeText(selectedHype, centerX, 100);
       
-      // White fill
       ctx.fillStyle = "#ffffff";
-      ctx.fillText("MY FAUX MUST-SEE", centerX, 120);
+      ctx.fillText(selectedHype, centerX, 100);
 
-      // Band name with excellent contrast
-      ctx.font = "bold 72px Arial, sans-serif";
-      let fontSize = 72;
+      // Band name with even more impact
+      ctx.font = "bold 84px Arial, sans-serif";
+      let fontSize = 84;
       while (
-        ctx.measureText(band.name.toUpperCase()).width > canvas.width - 400 && // Account for image space
-        fontSize > 32
+        ctx.measureText(band.name.toUpperCase()).width > canvas.width - 450 &&
+        fontSize > 36
       ) {
         fontSize -= 4;
         ctx.font = `bold ${fontSize}px Arial, sans-serif`;
       }
 
-      // Thick black outline
+      // Multiple shadow layers for depth
+      ctx.strokeStyle = "rgba(0, 0, 0, 0.8)";
+      ctx.lineWidth = 12;
+      ctx.strokeText(band.name.toUpperCase(), centerX + 2, centerY + 2);
+      
       ctx.strokeStyle = "rgba(0, 0, 0, 0.95)";
       ctx.lineWidth = 8;
-      ctx.strokeText(band.name.toUpperCase(), centerX, centerY - 20);
+      ctx.strokeText(band.name.toUpperCase(), centerX, centerY);
       
-      // White fill
       ctx.fillStyle = "#ffffff";
-      ctx.fillText(band.name.toUpperCase(), centerX, centerY - 20);
+      ctx.fillText(band.name.toUpperCase(), centerX, centerY);
 
-      // Location with strong contrast
-      ctx.font = "32px Arial, sans-serif";
-      ctx.strokeStyle = "rgba(0, 0, 0, 0.9)";
-      ctx.lineWidth = 4;
-      ctx.strokeText(band.bandLocation, centerX, centerY + 40);
-      ctx.fillStyle = "#ffffff";
-      ctx.fillText(band.bandLocation, centerX, centerY + 40);
-
-      // High contrast match percentage box
-      ctx.fillStyle = "rgba(0, 0, 0, 0.8)"; // Dark background
-      ctx.fillRect(centerX - 140, centerY + 80, 280, 70);
-      
-      // Bright border
-      ctx.strokeStyle = `rgb(${colors.accent.r}, ${colors.accent.g}, ${colors.accent.b})`;
-      ctx.lineWidth = 4;
-      ctx.strokeRect(centerX - 140, centerY + 80, 280, 70);
-
-      ctx.font = "bold 40px Arial, sans-serif";
-      ctx.fillStyle = "#ffffff"; // White text on dark background
-      ctx.fillText(`${matchPercentage}% MATCH`, centerX, centerY + 130);
-
-      // Bottom text with strong contrast (centered on full width)
+      // Location with better styling
       ctx.font = "28px Arial, sans-serif";
       ctx.strokeStyle = "rgba(0, 0, 0, 0.9)";
       ctx.lineWidth = 4;
-      ctx.strokeText("Find your must-see band at", canvas.width / 2, canvas.height - 80);
+      ctx.strokeText(`AT FAUX • ${band.bandLocation}`, centerX, centerY + 50);
       ctx.fillStyle = "#ffffff";
-      ctx.fillText("Find your must-see band at", canvas.width / 2, canvas.height - 80);
+      ctx.fillText(`AT FAUX • ${band.bandLocation}`, centerX, centerY + 50);
 
-      ctx.font = "bold 36px Arial, sans-serif";
+      // Enhanced match percentage with cooler design
+      const boxWidth = 320;
+      const boxHeight = 80;
+      const boxX = centerX - boxWidth / 2;
+      const boxY = centerY + 80;
+
+      // Gradient background for the box
+      const boxGradient = ctx.createLinearGradient(boxX, boxY, boxX + boxWidth, boxY + boxHeight);
+      boxGradient.addColorStop(0, "rgba(0, 0, 0, 0.9)");
+      boxGradient.addColorStop(1, "rgba(0, 0, 0, 0.7)");
+      
+      ctx.fillStyle = boxGradient;
+      ctx.fillRect(boxX, boxY, boxWidth, boxHeight);
+      
+      // Glowing border
+      ctx.strokeStyle = `rgba(${colors.accent.r}, ${colors.accent.g}, ${colors.accent.b}, 0.9)`;
+      ctx.lineWidth = 3;
+      ctx.strokeRect(boxX, boxY, boxWidth, boxHeight);
+      
+      // Inner glow
+      ctx.strokeStyle = `rgba(${colors.accent.r}, ${colors.accent.g}, ${colors.accent.b}, 0.4)`;
+      ctx.lineWidth = 1;
+      ctx.strokeRect(boxX + 2, boxY + 2, boxWidth - 4, boxHeight - 4);
+
+      ctx.font = "bold 42px Arial, sans-serif";
+      ctx.fillStyle = "#ffffff";
+      ctx.fillText(`${matchPercentage}% MATCH`, centerX, centerY + 135);
+
+      // Bottom text that actually makes sense
+      ctx.font = "24px Arial, sans-serif";
+      ctx.strokeStyle = "rgba(0, 0, 0, 0.9)";
+      ctx.lineWidth = 4;
+      ctx.strokeText("Find your Faux must-see at", canvas.width / 2, canvas.height - 80);
+      ctx.fillStyle = "#ffffff";
+      ctx.fillText("Find your Faux must-see at", canvas.width / 2, canvas.height - 80);
+
+      ctx.font = "bold 38px Arial, sans-serif";
       ctx.strokeStyle = "rgba(0, 0, 0, 0.9)";
       ctx.lineWidth = 5;
       ctx.strokeText("dullmace.lol", canvas.width / 2, canvas.height - 35);
-      ctx.fillStyle = "#ffffff";
+      ctx.fillStyle = `rgb(${colors.accent.r}, ${colors.accent.g}, ${colors.accent.b})`;
       ctx.fillText("dullmace.lol", canvas.width / 2, canvas.height - 35);
+
+      // Add some final decorative elements
+      ctx.strokeStyle = `rgba(${colors.accent.r}, ${colors.accent.g}, ${colors.accent.b}, 0.6)`;
+      ctx.lineWidth = 2;
+      
+      // Decorative lines
+      ctx.beginPath();
+      ctx.moveTo(centerX - 120, 130);
+      ctx.lineTo(centerX + 120, 130);
+      ctx.stroke();
+      
+      ctx.beginPath();
+      ctx.moveTo(centerX - 120, centerY + 180);
+      ctx.lineTo(centerX + 120, centerY + 180);
+      ctx.stroke();
 
       canvas.toBlob(
         (blob) => {
           if (blob) {
-            console.log("Bright readable share image generated successfully, size:", blob.size);
+            console.log("Enhanced share image generated successfully, size:", blob.size);
             resolve(blob);
           } else {
             console.error("Failed to create share image blob");
@@ -908,7 +960,16 @@ const ShareButtons = ({ band, token }) => {
     `Canceling all other plans to be front and center for ${band.name} at Faux. Who's your can't-miss act? See here: ${shareUrl}`,
     `Just got my marching orders: ${band.name} is my Faux anthem. What's yours? Find out your perfect fest pairing: ${shareUrl}`,
     `Prepare for maximum headbanging with ${band.name} at Faux. What band is calling your name? Get your match: ${shareUrl}`,
-    `My future involves a lot of sweat and ${band.name} at Faux. Who's your fest forecast looking like? Discover now: ${shareUrl}`
+    `My future involves a lot of sweat and ${band.name} at Faux. Who's your fest forecast looking like? Discover now: ${shareUrl}`,
+    `My Spotify just exposed me: I'm meant to cry-sing with ${band.name} at Faux. Find your cathartic concert: ${shareUrl}`,
+    `I'm not saying ${band.name} is my entire personality, but I'm going to Faux for them. Who are you at Faux? Find out: ${shareUrl}`,
+    `My bones are ready to be rearranged in ${band.name}'s pit at Faux. Find out who's gonna wreck your weekend (in a good way): ${shareUrl}`,
+    `Getting my angst on with ${band.name} at Faux. Who's your emotional support band? Discover here: ${shareUrl}`,
+    `I've been training for this moment: aggressively swaying to ${band.name} at Faux. Find your workout buddy: ${shareUrl}`,
+    `Brace yourselves, because I'm about to go full goblin mode for ${band.name} at Faux. Find your inner goblin: ${shareUrl}`,
+    `This weekend, my heart belongs to ${band.name} at Faux. Who's got your heart? Find out: ${shareUrl}`,
+    `I'm ready to shed a single tear (or maybe a lot) during ${band.name}'s set at Faux. Find your tear-jerker: ${shareUrl}`,
+    `Forget sleep, I'm running on pure adrenaline and the promise of ${band.name} at Faux. What's fueling you? Discover now: ${shareUrl}`
   ];
 
   const getRandomTweetMessage = () => {
