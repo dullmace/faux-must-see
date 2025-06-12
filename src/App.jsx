@@ -915,47 +915,140 @@ const ShareButtons = ({ band, token }) => {
     return tweetMessages[Math.floor(Math.random() * tweetMessages.length)];
   };
 
+  // Detect if user is on mobile
+  const isMobile = () => {
+    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+           (navigator.maxTouchPoints && navigator.maxTouchPoints > 2);
+  };
+
+  // Check if Twitter app is likely installed (mobile only)
+  const hasTwitterApp = () => {
+    return isMobile() && (
+      /Twitter/i.test(navigator.userAgent) || 
+      window.location.protocol === 'twitter:' ||
+      document.querySelector('meta[name="twitter:app:id:iphone"]') !== null
+    );
+  };
+
   const handleTwitterShare = async () => {
     setIsGeneratingImage(true);
     
     try {
       const matchPercentage = Math.min(Math.round((band.score / 10) * 100), 100);
-      const imageBlob = await generateShareImage(band, matchPercentage, token);
-      
       const tweetText = getRandomTweetMessage();
       
-      if (imageBlob && navigator.share && navigator.canShare && navigator.canShare({ files: [new File([imageBlob], 'faux-share.png', { type: 'image/png' })] })) {
-        // Native share with image
-        const file = new File([imageBlob], `faux-${band.name.replace(/[^a-z0-9]/gi, '-').toLowerCase()}.png`, { type: 'image/png' });
-        await navigator.share({
-          title: "My Faux Must-See",
-          text: tweetText,
-          files: [file]
-        });
-      } else if (imageBlob) {
-        // Download image and open Twitter with text
-        const url = URL.createObjectURL(imageBlob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `faux-${band.name.replace(/[^a-z0-9]/gi, '-').toLowerCase()}.png`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
+      if (isMobile()) {
+        // Mobile-specific handling
+        const imageBlob = await generateShareImage(band, matchPercentage, token);
         
-        // Open Twitter with the text
-        const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}`;
-        window.open(twitterUrl, '_blank');
-        
-        alert("Image downloaded! Upload it to your tweet for maximum impact! 🎵");
+        if (imageBlob) {
+          // Try native mobile share first (works on iOS/Android)
+          if (navigator.share) {
+            try {
+              // Check if we can share files
+              if (navigator.canShare && navigator.canShare({ files: [new File([imageBlob], 'share.png', { type: 'image/png' })] })) {
+                const file = new File([imageBlob], `faux-${band.name.replace(/[^a-z0-9]/gi, '-').toLowerCase()}.png`, { type: 'image/png' });
+                await navigator.share({
+                  title: "My Faux Must-See",
+                  text: tweetText,
+                  files: [file]
+                });
+                return; // Success, exit early
+              } else {
+                // Share text only via native share, then handle image separately
+                await navigator.share({
+                  title: "My Faux Must-See",
+                  text: tweetText
+                });
+                return; // Success, exit early
+              }
+            } catch (shareError) {
+              console.log("Native share failed or cancelled:", shareError);
+              // Continue to fallback methods
+            }
+          }
+          
+          // Mobile fallback: Save image to device + copy text + open Twitter
+          try {
+            // Create a temporary link to download the image
+            const url = URL.createObjectURL(imageBlob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `faux-${band.name.replace(/[^a-z0-9]/gi, '-').toLowerCase()}.png`;
+            a.style.display = 'none';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            // Copy text to clipboard
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+              await navigator.clipboard.writeText(tweetText);
+            }
+            
+            // Try Twitter app first, then web
+            const twitterAppUrl = `twitter://post?message=${encodeURIComponent(tweetText)}`;
+            const twitterWebUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}`;
+            
+            // Create a hidden iframe to test Twitter app
+            const iframe = document.createElement('iframe');
+            iframe.style.display = 'none';
+            iframe.src = twitterAppUrl;
+            document.body.appendChild(iframe);
+            
+            // If Twitter app doesn't open in 2 seconds, use web
+            setTimeout(() => {
+              document.body.removeChild(iframe);
+              window.open(twitterWebUrl, '_blank');
+            }, 2000);
+            
+            // Show user-friendly message
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+              alert("📸 Image saved to your device!\n📝 Tweet text copied to clipboard!\n🐦 Opening Twitter...\n\nJust paste the text and attach the downloaded image!");
+            } else {
+              alert("📸 Image saved to your device!\n🐦 Opening Twitter...\n\nAttach the downloaded image to your tweet!");
+            }
+            
+          } catch (downloadError) {
+            console.error("Download failed:", downloadError);
+            // Final fallback: just open Twitter with text
+            const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}`;
+            window.open(twitterUrl, '_blank');
+          }
+        } else {
+          // No image, just share text
+          const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}`;
+          window.open(twitterUrl, '_blank');
+        }
       } else {
-        // Fallback to text-only tweet
-        const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}`;
-        window.open(twitterUrl, '_blank');
+        // Desktop handling (original logic)
+        const imageBlob = await generateShareImage(band, matchPercentage, token);
+        
+        if (imageBlob) {
+          // Download image and open Twitter
+          const url = URL.createObjectURL(imageBlob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `faux-${band.name.replace(/[^a-z0-9]/gi, '-').toLowerCase()}.png`;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+          
+          // Open Twitter
+          const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}`;
+          window.open(twitterUrl, '_blank');
+          
+          alert("Image downloaded! Upload it to your tweet for maximum impact! 🎵");
+        } else {
+          // Fallback to text-only tweet
+          const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}`;
+          window.open(twitterUrl, '_blank');
+        }
       }
     } catch (error) {
       console.error('Error generating Twitter share:', error);
-      // Fallback to text-only tweet
+      // Final fallback: text-only tweet
       const tweetText = getRandomTweetMessage();
       const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}`;
       window.open(twitterUrl, '_blank');
@@ -977,15 +1070,24 @@ const ShareButtons = ({ band, token }) => {
         throw new Error("Failed to generate image");
       }
       
-      if (navigator.share && navigator.canShare && navigator.canShare({ files: [new File([imageBlob], 'faux-share.png', { type: 'image/png' })] })) {
-        // Native share with image
-        const file = new File([imageBlob], 'my-faux-must-see.png', { type: 'image/png' });
-        const shareText = getRandomTweetMessage();
-        await navigator.share({
-          title: "My Faux Must-See",
-          text: shareText,
-          files: [file]
-        });
+      const shareText = getRandomTweetMessage();
+      
+      if (navigator.share) {
+        // Try native share first
+        if (navigator.canShare && navigator.canShare({ files: [new File([imageBlob], 'faux-share.png', { type: 'image/png' })] })) {
+          const file = new File([imageBlob], 'my-faux-must-see.png', { type: 'image/png' });
+          await navigator.share({
+            title: "My Faux Must-See",
+            text: shareText,
+            files: [file]
+          });
+        } else {
+          // Share text only
+          await navigator.share({
+            title: "My Faux Must-See",
+            text: shareText,
+          });
+        }
       } else {
         // Fallback: download image
         const url = URL.createObjectURL(imageBlob);
@@ -997,8 +1099,7 @@ const ShareButtons = ({ band, token }) => {
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
         
-        // Also copy text to clipboard
-        const shareText = getRandomTweetMessage();
+        // Copy text to clipboard
         if (navigator.clipboard) {
           await navigator.clipboard.writeText(shareText);
           alert("Image downloaded and text copied to clipboard!");
@@ -1008,8 +1109,7 @@ const ShareButtons = ({ band, token }) => {
       }
     } catch (error) {
       console.error('Error generating share image:', error);
-      alert("Failed to generate image. Sharing text instead.");
-      handleTextShare();
+      alert("Failed to generate image. Try the text share instead.");
     } finally {
       setIsGeneratingImage(false);
     }
@@ -1029,8 +1129,19 @@ const ShareButtons = ({ band, token }) => {
       }
     } else {
       // Fallback: copy to clipboard
-      navigator.clipboard.writeText(shareText);
-      alert("Link copied to clipboard!");
+      if (navigator.clipboard) {
+        await navigator.clipboard.writeText(shareText);
+        alert("Text copied to clipboard!");
+      } else {
+        // Final fallback for very old browsers
+        const textArea = document.createElement('textarea');
+        textArea.value = shareText;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+        alert("Text copied to clipboard!");
+      }
     }
   };
 
@@ -1049,7 +1160,7 @@ const ShareButtons = ({ band, token }) => {
         ) : (
           <>
             <span className="share-icon">🐦</span>
-            Tweet This
+            {isMobile() ? "Tweet + Image" : "Tweet This"}
           </>
         )}
       </button>
