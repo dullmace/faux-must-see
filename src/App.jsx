@@ -878,14 +878,6 @@ const LoginScreen = ({ onLogin }) => (
       to miss? Connect with Spotify to find your perfect match.
     </p>
 
-    <div className="lineup-image-container">
-      <img
-        src="https://res.cloudinary.com/dmrkor9s4/image/upload/v1749715839/faux-times.jpg"
-        alt="Faux 2025 Lineup Schedule"
-        className="lineup-image"
-      />
-    </div>
-
     <button onClick={onLogin} className="spotify-button">
       <span className="spotify-icon">♪</span>
       Connect with Spotify
