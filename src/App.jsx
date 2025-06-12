@@ -737,51 +737,105 @@ const generateShareImage = async (band, matchPercentage, token, userProfile = nu
 
       drawSoundWaves();
       drawMusicNotes();
-
-      // Load and draw user profile image
-      if (userProfile && userProfile.images && userProfile.images.length > 0) {
+      
+      // Load and draw user profile image and name
+      if (userProfile) {
         try {
-          const userImage = await loadImage(userProfile.images[0].url);
-          if (userImage) {
-            const userImageSize = 80;
-            const userImageX = 60;
-            const userImageY = 60;
+          // Always show the username, even if no image
+          const userName = userProfile.display_name || userProfile.id;
+          
+          if (userProfile.images && userProfile.images.length > 0) {
+            // Try to load and show profile image
+            const userImage = await loadImage(userProfile.images[0].url);
+            if (userImage) {
+              const userImageSize = 80;
+              const userImageX = 60;
+              const userImageY = 60;
 
-            ctx.save();
+              ctx.save();
+              
+              ctx.beginPath();
+              ctx.arc(userImageX, userImageY, userImageSize / 2, 0, Math.PI * 2);
+              ctx.clip();
+              
+              ctx.drawImage(
+                userImage, 
+                userImageX - userImageSize / 2, 
+                userImageY - userImageSize / 2, 
+                userImageSize, 
+                userImageSize
+              );
+              
+              ctx.restore();
+
+              ctx.strokeStyle = "#ffffff";
+              ctx.lineWidth = 3;
+              ctx.beginPath();
+              ctx.arc(userImageX, userImageY, userImageSize / 2 + 2, 0, Math.PI * 2);
+              ctx.stroke();
+
+              // Username below image
+              ctx.font = "600 18px Arial, sans-serif";
+              ctx.textAlign = "left";
+              ctx.strokeStyle = "rgba(0, 0, 0, 0.9)";
+              ctx.lineWidth = 3;
+              ctx.strokeText(`@${userName}`, 20, 130);
+              ctx.fillStyle = "#ffffff";
+              ctx.fillText(`@${userName}`, 20, 130);
+            } else {
+              // No image loaded, show username only with icon
+              ctx.font = "600 18px Arial, sans-serif";
+              ctx.textAlign = "left";
+              
+              // Draw a simple user icon
+              ctx.fillStyle = "rgba(255, 255, 255, 0.8)";
+              ctx.beginPath();
+              ctx.arc(40, 60, 25, 0, Math.PI * 2);
+              ctx.fill();
+              
+              ctx.fillStyle = "rgba(0, 0, 0, 0.7)";
+              ctx.font = "24px Arial, sans-serif";
+              ctx.textAlign = "center";
+              ctx.fillText("👤", 40, 68);
+              
+              // Username
+              ctx.font = "600 18px Arial, sans-serif";
+              ctx.textAlign = "left";
+              ctx.strokeStyle = "rgba(0, 0, 0, 0.9)";
+              ctx.lineWidth = 3;
+              ctx.strokeText(`@${userName}`, 20, 100);
+              ctx.fillStyle = "#ffffff";
+              ctx.fillText(`@${userName}`, 20, 100);
+            }
+          } else {
+            // No profile image available, show username only with icon
+            ctx.font = "600 18px Arial, sans-serif";
+            ctx.textAlign = "left";
             
+            // Draw a simple user icon
+            ctx.fillStyle = "rgba(255, 255, 255, 0.8)";
             ctx.beginPath();
-            ctx.arc(userImageX, userImageY, userImageSize / 2, 0, Math.PI * 2);
-            ctx.clip();
+            ctx.arc(40, 60, 25, 0, Math.PI * 2);
+            ctx.fill();
             
-            ctx.drawImage(
-              userImage, 
-              userImageX - userImageSize / 2, 
-              userImageY - userImageSize / 2, 
-              userImageSize, 
-              userImageSize
-            );
+            ctx.fillStyle = "rgba(0, 0, 0, 0.7)";
+            ctx.font = "24px Arial, sans-serif";
+            ctx.textAlign = "center";
+            ctx.fillText("👤", 40, 68);
             
-            ctx.restore();
-
-            ctx.strokeStyle = "#ffffff";
-            ctx.lineWidth = 3;
-            ctx.beginPath();
-            ctx.arc(userImageX, userImageY, userImageSize / 2 + 2, 0, Math.PI * 2);
-            ctx.stroke();
-
+            // Username
             ctx.font = "600 18px Arial, sans-serif";
             ctx.textAlign = "left";
             ctx.strokeStyle = "rgba(0, 0, 0, 0.9)";
             ctx.lineWidth = 3;
-            ctx.strokeText(`@${userProfile.display_name || userProfile.id}`, 20, 130);
+            ctx.strokeText(`@${userName}`, 20, 100);
             ctx.fillStyle = "#ffffff";
-            ctx.fillText(`@${userProfile.display_name || userProfile.id}`, 20, 130);
+            ctx.fillText(`@${userName}`, 20, 100);
           }
         } catch (userImageError) {
-          console.warn("User image loading failed:", userImageError);
+          console.warn("User profile display failed:", userImageError);
         }
       }
-
 
       // Load and draw band image
       try {
