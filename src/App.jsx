@@ -104,25 +104,33 @@ const getRankedMatches = async (token, timeRange) => {
 
 const loadImage = (src) => {
   return new Promise((resolve) => {
+    if (!src) {
+      console.warn("No image source provided");
+      resolve(null);
+      return;
+    }
+
     const img = new Image();
     img.crossOrigin = "anonymous";
     
     const timeout = setTimeout(() => {
-      console.warn("Image loading timeout");
+      console.warn("Image loading timeout for:", src);
       resolve(null);
-    }, 10000);
+    }, 15000); // Increased timeout
     
     img.onload = () => {
       clearTimeout(timeout);
+      console.log("Image loaded successfully:", src);
       resolve(img);
     };
     
-    img.onerror = () => {
+    img.onerror = (error) => {
       clearTimeout(timeout);
-      console.warn("Failed to load band image");
+      console.warn("Failed to load image:", src, error);
       resolve(null);
     };
     
+    console.log("Starting to load image:", src);
     img.src = src;
   });
 };
@@ -584,11 +592,25 @@ const getAlbumArtFromSpotify = async (token, spotifyId) => {
 const generateShareImage = async (band, matchPercentage, token, userProfile = null) => {
   return new Promise(async (resolve) => {
     try {
+      console.log("Starting share image generation for:", band.name);
+      
       const canvas = document.createElement("canvas");
       const ctx = canvas.getContext("2d");
 
+      if (!ctx) {
+        console.error("Failed to get canvas context");
+        resolve(null);
+        return;
+      }
+
       canvas.width = 1200;
       canvas.height = 630;
+      console.log("Canvas created:", canvas.width, "x", canvas.height);
+
+      // Test basic canvas functionality
+      ctx.fillStyle = "red";
+      ctx.fillRect(0, 0, 10, 10);
+      console.log("Basic canvas test passed");
 
       let colors = {
         primary: { r: 255, g: 120, b: 60 },
@@ -596,14 +618,25 @@ const generateShareImage = async (band, matchPercentage, token, userProfile = nu
         accent: { r: 255, g: 200, b: 50 }
       };
 
-      if (token && band.spotifyLink) {
-        const spotifyId = band.spotifyLink.split("/").pop();
-        const albumArtUrl = await getAlbumArtFromSpotify(token, spotifyId);
-        if (albumArtUrl) {
-          colors = await extractColorsFromImage(albumArtUrl);
+      // Try to get colors from Spotify (but don't fail if this doesn't work)
+      try {
+        if (token && band.spotifyLink) {
+          console.log("Attempting to get album art colors");
+          const spotifyId = band.spotifyLink.split("/").pop();
+          const albumArtUrl = await getAlbumArtFromSpotify(token, spotifyId);
+          if (albumArtUrl) {
+            console.log("Album art URL found:", albumArtUrl);
+            colors = await extractColorsFromImage(albumArtUrl);
+            console.log("Colors extracted:", colors);
+          }
         }
+      } catch (colorError) {
+        console.warn("Color extraction failed, using defaults:", colorError);
+        // Continue with default colors
       }
 
+      // Create gradient background
+      console.log("Creating gradient background");
       const gradient = ctx.createRadialGradient(
         canvas.width * 0.3, canvas.width * 0.3, 0,
         canvas.width * 0.7, canvas.height * 0.7, canvas.width
@@ -615,172 +648,100 @@ const generateShareImage = async (band, matchPercentage, token, userProfile = nu
 
       ctx.fillStyle = gradient;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
+      console.log("Background gradient applied");
 
+      // Add texture patterns (simplified)
+      console.log("Adding texture patterns");
       ctx.fillStyle = `rgba(255, 255, 255, 0.12)`;
-      for (let i = 0; i < canvas.width; i += 2) {
-        for (let j = 0; j < canvas.height; j += 2) {
-          if (Math.random() > 0.88) {
-            ctx.fillRect(i, j, Math.random() > 0.5 ? 1 : 2, Math.random() > 0.5 ? 1 : 2);
+      for (let i = 0; i < canvas.width; i += 50) {
+        for (let j = 0; j < canvas.height; j += 50) {
+          if (Math.random() > 0.7) {
+            ctx.fillRect(i, j, 2, 2);
           }
         }
       }
 
-      ctx.strokeStyle = `rgba(255, 255, 255, 0.06)`;
-      ctx.lineWidth = 1;
-      for (let i = 0; i < 20; i++) {
-        const startX = Math.random() * canvas.width;
-        const startY = Math.random() * canvas.height;
-        const length = 50 + Math.random() * 100;
-        const angle = Math.random() * Math.PI * 2;
-        
-        ctx.beginPath();
-        ctx.moveTo(startX, startY);
-        ctx.lineTo(startX + Math.cos(angle) * length, startY + Math.sin(angle) * length);
-        ctx.stroke();
+      // Try to load and draw user profile image
+      try {
+        if (userProfile && userProfile.images && userProfile.images.length > 0) {
+          console.log("Loading user profile image");
+          const userImage = await loadImage(userProfile.images[0].url);
+          if (userImage) {
+            console.log("User image loaded successfully");
+            const userImageSize = 80;
+            const userImageX = 60;
+            const userImageY = 60;
+
+            ctx.save();
+            ctx.beginPath();
+            ctx.arc(userImageX, userImageY, userImageSize / 2, 0, Math.PI * 2);
+            ctx.clip();
+            ctx.drawImage(
+              userImage, 
+              userImageX - userImageSize / 2, 
+              userImageY - userImageSize / 2, 
+              userImageSize, 
+              userImageSize
+            );
+            ctx.restore();
+
+            // Add border
+            ctx.strokeStyle = "#ffffff";
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.arc(userImageX, userImageY, userImageSize / 2 + 2, 0, Math.PI * 2);
+            ctx.stroke();
+          }
+        }
+      } catch (userImageError) {
+        console.warn("User image loading failed:", userImageError);
+        // Continue without user image
       }
 
-      ctx.fillStyle = `rgba(0, 0, 0, 0.08)`;
-      for (let i = 0; i < 15; i++) {
-        const x = Math.random() * canvas.width;
-        const y = Math.random() * canvas.height;
-        const size = 10 + Math.random() * 30;
-        
-        ctx.save();
-        ctx.globalAlpha = 0.3;
-        ctx.beginPath();
-        ctx.arc(x, y, size, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.restore();
-      }
-
-      ctx.fillStyle = `rgba(${colors.accent.r}, ${colors.accent.g}, ${colors.accent.b}, 0.15)`;
-      for (let i = 0; i < 8; i++) {
-        const x = Math.random() * canvas.width;
-        const y = Math.random() * canvas.height;
-        const size = 5 + Math.random() * 15;
-        
-        ctx.save();
-        ctx.globalAlpha = 0.4;
-        ctx.beginPath();
-        ctx.arc(x, y, size, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.restore();
-      }
-
-      if (userProfile && userProfile.images && userProfile.images.length > 0) {
-        const userImage = await loadImage(userProfile.images[0].url);
-        if (userImage) {
-          const userImageSize = 80;
-          const userImageX = 60;
-          const userImageY = 60;
+      // Try to load and draw band image
+      try {
+        console.log("Loading band image:", band.bandImage);
+        const bandImage = await loadImage(band.bandImage);
+        if (bandImage) {
+          console.log("Band image loaded successfully");
+          const imageSize = 280;
+          const imageX = canvas.width - 180;
+          const imageY = 280;
 
           ctx.save();
+          ctx.shadowColor = `rgba(${colors.accent.r}, ${colors.accent.g}, ${colors.accent.b}, 0.6)`;
+          ctx.shadowBlur = 25;
+          ctx.shadowOffsetX = 0;
+          ctx.shadowOffsetY = 0;
           
           ctx.beginPath();
-          ctx.arc(userImageX, userImageY, userImageSize / 2, 0, Math.PI * 2);
+          ctx.arc(imageX, imageY, imageSize / 2, 0, Math.PI * 2);
           ctx.clip();
           
           ctx.drawImage(
-            userImage, 
-            userImageX - userImageSize / 2, 
-            userImageY - userImageSize / 2, 
-            userImageSize, 
-            userImageSize
+            bandImage, 
+            imageX - imageSize / 2, 
+            imageY - imageSize / 2, 
+            imageSize, 
+            imageSize
           );
           
           ctx.restore();
 
+          // Add borders
           ctx.strokeStyle = "#ffffff";
-          ctx.lineWidth = 3;
+          ctx.lineWidth = 5;
           ctx.beginPath();
-          ctx.arc(userImageX, userImageY, userImageSize / 2 + 2, 0, Math.PI * 2);
-          ctx.stroke();
-
-          ctx.font = "600 18px 'Oswald', sans-serif";
-          ctx.textAlign = "left";
-          ctx.strokeStyle = "rgba(0, 0, 0, 0.9)";
-          ctx.lineWidth = 3;
-          ctx.strokeText(selectedHype, centerX, 140);
-          ctx.fillStyle = "#ffffff";
-          ctx.fillText(selectedHype, centerX, 140);
-        }
-      }
-
-      const bandImage = await loadImage(band.bandImage);
-      if (bandImage) {
-        const imageSize = 280;
-        const imageX = canvas.width - 180;
-        const imageY = 280;
-
-        ctx.save();
-        
-        ctx.shadowColor = `rgba(${colors.accent.r}, ${colors.accent.g}, ${colors.accent.b}, 0.6)`;
-        ctx.shadowBlur = 25;
-        ctx.shadowOffsetX = 0;
-        ctx.shadowOffsetY = 0;
-        
-        ctx.beginPath();
-        ctx.arc(imageX, imageY, imageSize / 2, 0, Math.PI * 2);
-        ctx.clip();
-        
-        ctx.drawImage(
-          bandImage, 
-          imageX - imageSize / 2, 
-          imageY - imageSize / 2, 
-          imageSize, 
-          imageSize
-        );
-        
-        ctx.restore();
-
-        ctx.strokeStyle = "#ffffff";
-        ctx.lineWidth = 5;
-        ctx.beginPath();
-        ctx.arc(imageX, imageY, imageSize / 2 + 3, 0, Math.PI * 2);
-        ctx.stroke();
-
-        ctx.strokeStyle = `rgba(${colors.accent.r}, ${colors.accent.g}, ${colors.accent.b}, 0.8)`;
-        ctx.lineWidth = 3;
-        ctx.beginPath();
-        ctx.arc(imageX, imageY, imageSize / 2 + 10, 0, Math.PI * 2);
-        ctx.stroke();
-      }
-
-      const drawVinyl = (x, y, size, opacity, rotation = 0) => {
-        ctx.save();
-        ctx.globalAlpha = opacity;
-        ctx.translate(x, y);
-        ctx.rotate(rotation);
-        
-        const vinylGradient = ctx.createRadialGradient(0, 0, 0, 0, 0, size);
-        vinylGradient.addColorStop(0, `rgba(${colors.secondary.r}, ${colors.secondary.g}, ${colors.secondary.b}, 0.3)`);
-        vinylGradient.addColorStop(1, `rgba(${colors.primary.r}, ${colors.primary.g}, ${colors.primary.b}, 0.2)`);
-        
-        ctx.fillStyle = vinylGradient;
-        ctx.beginPath();
-        ctx.arc(0, 0, size, 0, Math.PI * 2);
-        ctx.fill();
-
-        for (let radius = size * 0.2; radius < size; radius += size * 0.08) {
-          ctx.strokeStyle = `rgba(255, 255, 255, ${0.3 - (radius / size) * 0.2})`;
-          ctx.lineWidth = 1;
-          ctx.beginPath();
-          ctx.arc(0, 0, radius, 0, Math.PI * 2);
+          ctx.arc(imageX, imageY, imageSize / 2 + 3, 0, Math.PI * 2);
           ctx.stroke();
         }
+      } catch (bandImageError) {
+        console.warn("Band image loading failed:", bandImageError);
+        // Continue without band image
+      }
 
-        ctx.fillStyle = `rgba(${colors.accent.r}, ${colors.accent.g}, ${colors.accent.b}, 0.8)`;
-        ctx.beginPath();
-        ctx.arc(0, 0, size * 0.12, 0, Math.PI * 2);
-        ctx.fill();
-        
-        ctx.restore();
-      };
-
-      drawVinyl(200, 100, 60, 0.5, 0.3);
-      drawVinyl(canvas.width - 100, canvas.height - 100, 60, 0.5, -0.5);
-      drawVinyl(150, canvas.height - 80, 35, 0.4, 1.2);
-
+      // Add text content
+      console.log("Adding text content");
       const centerX = canvas.width / 2 - 100;
       const centerY = canvas.height / 2 - 40;
 
@@ -807,22 +768,32 @@ const generateShareImage = async (band, matchPercentage, token, userProfile = nu
       
       ctx.textAlign = "center";
       
+      // Hype text (moved up)
       ctx.strokeStyle = "rgba(0, 0, 0, 0.95)";
       ctx.lineWidth = 5;
-      ctx.font = "700 32px 'Oswald', sans-serif";
-      ctx.strokeText(selectedHype, centerX, 160);
+      ctx.font = "700 32px Arial, sans-serif";
+      ctx.strokeText(selectedHype, centerX, 140);
       
       ctx.fillStyle = "#ffffff";
-      ctx.fillText(selectedHype, centerX, 160);
+      ctx.fillText(selectedHype, centerX, 140);
 
-      ctx.font = "400 84px 'Bebas Neue', sans-serif";
+      // Divider line (moved up)
+      ctx.strokeStyle = `rgba(${colors.accent.r}, ${colors.accent.g}, ${colors.accent.b}, 0.6)`;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(centerX - 120, 170);
+      ctx.lineTo(centerX + 120, 170);
+      ctx.stroke();
+
+      // Band name
+      ctx.font = "400 84px Arial, sans-serif";
       let fontSize = 84;
       while (
         ctx.measureText(band.name.toUpperCase()).width > canvas.width - 500 &&
         fontSize > 36
       ) {
         fontSize -= 4;
-        ctx.font = `400 ${fontSize}px 'Bebas Neue', sans-serif`;
+        ctx.font = `400 ${fontSize}px Arial, sans-serif`;
       }
 
       ctx.strokeStyle = "rgba(0, 0, 0, 0.8)";
@@ -836,17 +807,26 @@ const generateShareImage = async (band, matchPercentage, token, userProfile = nu
       ctx.fillStyle = "#ffffff";
       ctx.fillText(band.name.toUpperCase(), centerX, centerY - 20);
 
-      const fauxLogo = await loadImage("https://res.cloudinary.com/dmrkor9s4/image/upload/v1749730814/atfaux8_dl5dzn.png");
-      if (fauxLogo) {
-        const logoScale = 0.4;
-        const logoWidth = 550 * logoScale;
-        const logoHeight = 170 * logoScale;
-        const logoX = centerX - logoWidth / 2;
-        const logoY = centerY + 20;
-        
-        ctx.drawImage(fauxLogo, logoX, logoY, logoWidth, logoHeight);
+      // Try to load Faux logo
+      try {
+        console.log("Loading Faux logo");
+        const fauxLogo = await loadImage("https://res.cloudinary.com/dmrkor9s4/image/upload/v1749730814/atfaux8_dl5dzn.png");
+        if (fauxLogo) {
+          console.log("Faux logo loaded successfully");
+          const logoScale = 0.4;
+          const logoWidth = 550 * logoScale;
+          const logoHeight = 170 * logoScale;
+          const logoX = centerX - logoWidth / 2;
+          const logoY = centerY + 20;
+          
+          ctx.drawImage(fauxLogo, logoX, logoY, logoWidth, logoHeight);
+        }
+      } catch (logoError) {
+        console.warn("Faux logo loading failed:", logoError);
+        // Continue without logo
       }
 
+      // Match percentage box
       const boxWidth = 320;
       const boxHeight = 80;
       const boxX = centerX - boxWidth / 2;
@@ -862,15 +842,12 @@ const generateShareImage = async (band, matchPercentage, token, userProfile = nu
       ctx.strokeStyle = `rgba(${colors.accent.r}, ${colors.accent.g}, ${colors.accent.b}, 0.9)`;
       ctx.lineWidth = 3;
       ctx.strokeRect(boxX, boxY, boxWidth, boxHeight);
-      
-      ctx.strokeStyle = `rgba(${colors.accent.r}, ${colors.accent.g}, ${colors.accent.b}, 0.4)`;
-      ctx.lineWidth = 1;
-      ctx.strokeRect(boxX + 2, boxY + 2, boxWidth - 4, boxHeight - 4);
 
-      ctx.font = "400 42px 'Anton', sans-serif";
+      ctx.font = "400 42px Arial, sans-serif";
       ctx.fillStyle = "#ffffff";
       ctx.fillText(`${matchPercentage}% MATCH`, centerX, centerY + 165);
 
+      // Bottom text
       const bottomTexts = [
         "Find your Faux must-see at",
         "Find your fest obsession at",
@@ -882,40 +859,31 @@ const generateShareImage = async (band, matchPercentage, token, userProfile = nu
       
       const selectedBottom = bottomTexts[Math.floor(Math.random() * bottomTexts.length)];
       
-      ctx.font = "500 24px 'Oswald', sans-serif";
+      ctx.font = "500 24px Arial, sans-serif";
       ctx.strokeStyle = "rgba(0, 0, 0, 0.9)";
       ctx.lineWidth = 4;
       ctx.strokeText(selectedBottom, canvas.width / 2, canvas.height - 80);
       ctx.fillStyle = "#ffffff";
       ctx.fillText(selectedBottom, canvas.width / 2, canvas.height - 80);
 
-      ctx.font = "400 38px 'Anton', sans-serif";
+      ctx.font = "400 38px Arial, sans-serif";
       ctx.strokeStyle = "rgba(0, 0, 0, 0.9)";
       ctx.lineWidth = 5;
       ctx.strokeText("dullmace.lol", canvas.width / 2, canvas.height - 35);
       ctx.fillStyle = `rgb(${colors.accent.r}, ${colors.accent.g}, ${colors.accent.b})`;
       ctx.fillText("dullmace.lol", canvas.width / 2, canvas.height - 35);
 
-      ctx.strokeStyle = `rgba(${colors.accent.r}, ${colors.accent.g}, ${colors.accent.b}, 0.6)`;
-      ctx.lineWidth = 2;
-      
-      ctx.beginPath();
-      ctx.moveTo(centerX - 120, 170); // moved up from 190
-      ctx.lineTo(centerX + 120, 170); // moved up from 190
-      ctx.stroke();
-      
-      ctx.beginPath();
-      ctx.moveTo(centerX - 120, centerY + 210);
-      ctx.lineTo(centerX + 120, centerY + 210);
-      ctx.stroke();
+      console.log("Text content added successfully");
 
+      // Convert to blob
+      console.log("Converting canvas to blob");
       canvas.toBlob(
         (blob) => {
-          if (blob) {
-            console.log("Enhanced share image generated successfully, size:", blob.size);
+          if (blob && blob.size > 0) {
+            console.log("Share image generated successfully, size:", blob.size);
             resolve(blob);
           } else {
-            console.error("Failed to create share image blob");
+            console.error("Failed to create blob or blob is empty");
             resolve(null);
           }
         },
@@ -924,6 +892,7 @@ const generateShareImage = async (band, matchPercentage, token, userProfile = nu
       );
     } catch (error) {
       console.error("Error in generateShareImage:", error);
+      console.error("Error stack:", error.stack);
       resolve(null);
     }
   });
@@ -1015,6 +984,7 @@ const ShareButtons = ({ band, token }) => {
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
   const [tweetText, setTweetText] = useState('');
   const [shareImageBlob, setShareImageBlob] = useState(null);
+  const [error, setError] = useState(null);
   const shareUrl = "https://dullmace.lol";
   
   // Random tweet messages
@@ -1044,21 +1014,29 @@ const ShareButtons = ({ band, token }) => {
     return tweetMessages[Math.floor(Math.random() * tweetMessages.length)];
   };
 
-  // Generate tweet automatically on component mount
+// Generate tweet automatically on component mount
   useEffect(() => {
     const generateInitialContent = async () => {
       setIsGeneratingImage(true);
+      setError(null);
       try {
         const randomTweet = getRandomTweetMessage();
         setTweetText(randomTweet);
 
+        console.log("Generating share image for band:", band);
         const matchPercentage = Math.min(Math.round((band.score / 10) * 100), 100);
         const imageBlob = await generateShareImage(band, matchPercentage, token);
+        
         if (imageBlob) {
           setShareImageBlob(imageBlob);
+          console.log("Share image generated successfully");
+        } else {
+          console.error("Share image generation returned null");
+          setError("Failed to generate share image. Please check the console for details.");
         }
       } catch (error) {
         console.error("Error generating initial content:", error);
+        setError(`Error generating content: ${error.message}`);
       } finally {
         setIsGeneratingImage(false);
       }
@@ -1112,6 +1090,16 @@ const ShareButtons = ({ band, token }) => {
         <div className="generating-content">
           <div className="creating-spinner"></div>
           <p>Generating your share content...</p>
+        </div>
+      ) : error ? (
+        <div className="error-content">
+          <p className="error-message">{error}</p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="retry-button"
+          >
+            Try Again
+          </button>
         </div>
       ) : (
         <div className="share-content">
