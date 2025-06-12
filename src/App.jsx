@@ -1294,6 +1294,8 @@ const TwinCard = ({ band, token }) => {
   const [shareImageUrl, setShareImageUrl] = useState(null);
   const [generatingShareImage, setGeneratingShareImage] = useState(true);
   const [userProfile, setUserProfile] = useState(null);
+  const [userTopGenres, setUserTopGenres] = useState([]);
+  const [artistSpotifyGenres, setArtistSpotifyGenres] = useState([]);
 
   if (!band) return null;
 
@@ -1308,12 +1310,14 @@ const TwinCard = ({ band, token }) => {
         reason.charAt(0).toUpperCase() + reason.slice(1).replace(".", "")
     );
 
-  // Fetch user profile and generate share image on component mount
+  // Fetch user profile, genres, and generate share image on component mount
   useEffect(() => {
     const fetchUserAndGenerateImage = async () => {
       let profile = null;
+      let userGenres = [];
+      let spotifyGenres = [];
       
-      // Fetch user profile if token is available
+      // Fetch user profile and genres if token is available
       if (token) {
         try {
           const userRes = await fetch("https://api.spotify.com/v1/me", {
@@ -1323,8 +1327,41 @@ const TwinCard = ({ band, token }) => {
             profile = await userRes.json();
             setUserProfile(profile);
           }
+
+          // Get user's top genres
+          const artistsRes = await fetch(
+            `https://api.spotify.com/v1/me/top/artists?limit=20&time_range=medium_term`,
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
+          if (artistsRes.ok) {
+            const topArtistsData = await artistsRes.json();
+            const allGenres = topArtistsData.items?.flatMap(artist => artist.genres) || [];
+            // Get top 5 most common genres
+            const genreCounts = {};
+            allGenres.forEach(genre => {
+              genreCounts[genre] = (genreCounts[genre] || 0) + 1;
+            });
+            userGenres = Object.entries(genreCounts)
+              .sort(([,a], [,b]) => b - a)
+              .slice(0, 5)
+              .map(([genre]) => genre);
+            setUserTopGenres(userGenres);
+          }
+
+          // Get artist's Spotify genres
+          if (band.spotifyLink) {
+            const artistRes = await fetch(
+              `https://api.spotify.com/v1/artists/${spotifyId}`,
+              { headers: { Authorization: `Bearer ${token}` } }
+            );
+            if (artistRes.ok) {
+              const artistData = await artistRes.json();
+              spotifyGenres = artistData.genres || [];
+              setArtistSpotifyGenres(spotifyGenres);
+            }
+          }
         } catch (error) {
-          console.error("Error fetching user profile:", error);
+          console.error("Error fetching user profile/genres:", error);
         }
       }
 
@@ -1351,6 +1388,50 @@ const TwinCard = ({ band, token }) => {
       }
     };
   }, [band, matchPercentage, token]);
+
+  // Genre connection logic
+  const getGenreConnections = () => {
+    const jsonGenres = band.bandGenre ? band.bandGenre.split(' - ') : [];
+    const combinedArtistGenres = [...new Set([...jsonGenres, ...artistSpotifyGenres])];
+    
+    // Find shared genres between user and artist
+    const sharedGenres = userTopGenres.filter(userGenre => 
+      combinedArtistGenres.some(artistGenre => {
+        const userGenreLower = userGenre.toLowerCase();
+        const artistGenreLower = artistGenre.toLowerCase();
+        
+        return artistGenreLower.includes(userGenreLower) || 
+               userGenreLower.includes(artistGenreLower) ||
+               // Genre keyword matching
+               (userGenreLower.includes('rock') && artistGenreLower.includes('rock')) ||
+               (userGenreLower.includes('pop') && artistGenreLower.includes('pop')) ||
+               (userGenreLower.includes('indie') && artistGenreLower.includes('indie')) ||
+               (userGenreLower.includes('electronic') && artistGenreLower.includes('electronic')) ||
+               (userGenreLower.includes('metal') && artistGenreLower.includes('metal')) ||
+               (userGenreLower.includes('punk') && artistGenreLower.includes('punk')) ||
+               (userGenreLower.includes('folk') && artistGenreLower.includes('folk')) ||
+               (userGenreLower.includes('jazz') && artistGenreLower.includes('jazz')) ||
+               (userGenreLower.includes('hip hop') && artistGenreLower.includes('hip hop')) ||
+               (userGenreLower.includes('alternative') && artistGenreLower.includes('alternative')) ||
+               // Fest-specific genres
+               (userGenreLower.includes('pop punk') && artistGenreLower.includes('pop punk')) ||
+               (userGenreLower.includes('pop-punk') && artistGenreLower.includes('pop-punk')) ||
+               (userGenreLower.includes('math rock') && artistGenreLower.includes('math rock')) ||
+               (userGenreLower.includes('mathrock') && artistGenreLower.includes('mathrock')) ||
+               (userGenreLower.includes('emo') && artistGenreLower.includes('emo')) ||
+               (userGenreLower.includes('midwest emo') && artistGenreLower.includes('midwest emo')) ||
+               (userGenreLower.includes('midwestemo') && artistGenreLower.includes('midwestemo'))
+      })
+    );
+
+    return {
+      sharedGenres,
+      artistGenres: combinedArtistGenres,
+      userGenres: userTopGenres
+    };
+  };
+
+  const { sharedGenres, artistGenres, userGenres } = getGenreConnections();
 
   const handleCreatePlaylist = async () => {
     if (!token || creatingPlaylist) return;
@@ -1392,9 +1473,17 @@ const TwinCard = ({ band, token }) => {
         </div>
       </div>
       
+      {/* Move image above name and make smaller */}
+      <div className="band-image-main">
+        <img
+          src={band.bandImage}
+          alt={`Band photo of ${band.name}`}
+          className="band-image-hero"
+        />
+      </div>
+      
       <h1 className="band-name">{band.name}</h1>
       <p className="location">{band.bandLocation}</p>
-      <GenreTags genres={band.bandGenre} />
       
       {/* Share image section */}
       <div className="share-image-container">
@@ -1417,7 +1506,7 @@ const TwinCard = ({ band, token }) => {
       </div>
 
       <ShareButtons band={band} token={token} />
-        
+
       <div className="reason">
         <strong>Why you'll love them:</strong>
         <ul>
@@ -1426,11 +1515,76 @@ const TwinCard = ({ band, token }) => {
           ))}
         </ul>
       </div>
-      <img
-        src={band.bandImage}
-        alt={`Band photo of ${band.name}`}
-        className="band-image-corner"
-      />
+
+      {/* NEW: Stylized Genre Section */}
+      <div className="genre-connection-section">
+        <div className="genre-grid">
+          {/* Artist Genres */}
+          <div className="genre-column artist-genres">
+            <h4 className="genre-column-title">
+              <span className="genre-icon">🎸</span>
+              {band.name}'s Sound
+            </h4>
+            <div className="genre-tags-container">
+              {artistGenres.slice(0, 4).map((genre, index) => (
+                <span 
+                  key={index} 
+                  className={`genre-tag artist-tag ${sharedGenres.includes(genre) ? 'shared-genre' : ''}`}
+                >
+                  {sharedGenres.includes(genre) && <span className="connection-dot">●</span>}
+                  {genre}
+                </span>
+              ))}
+            </div>
+          </div>
+
+          {/* Connection Indicator */}
+          {sharedGenres.length > 0 && (
+            <div className="genre-connection-indicator">
+              <div className="connection-line"></div>
+              <div className="connection-badge">
+                <span className="connection-count">{sharedGenres.length}</span>
+                <span className="connection-text">
+                  {sharedGenres.length === 1 ? 'connection' : 'connections'}
+                </span>
+              </div>
+            </div>
+          )}
+
+          {/* User Genres */}
+          {userGenres.length > 0 && (
+            <div className="genre-column user-genres">
+              <h4 className="genre-column-title">
+                <span className="genre-icon">🎧</span>
+                Your Taste
+              </h4>
+              <div className="genre-tags-container">
+                {userGenres.slice(0, 4).map((genre, index) => (
+                  <span 
+                    key={index} 
+                    className={`genre-tag user-tag ${sharedGenres.includes(genre) ? 'shared-genre' : ''}`}
+                  >
+                    {sharedGenres.includes(genre) && <span className="connection-dot">●</span>}
+                    {genre}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Shared Genres Highlight */}
+        {sharedGenres.length > 0 && (
+          <div className="shared-genres-highlight">
+            <span className="shared-label">Connected by:</span>
+            {sharedGenres.slice(0, 3).map((genre, index) => (
+              <span key={index} className="shared-genre-pill">
+                {genre}
+              </span>
+            ))}
+          </div>
+        )}
+      </div>
       <iframe
         src={`https://open.spotify.com/embed/artist/${spotifyId}?utm_source=generator&theme=0`}
         width="100%"
