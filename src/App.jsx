@@ -102,6 +102,31 @@ const getRankedMatches = async (token, timeRange) => {
   return scoredBands.sort((a, b) => b.score - a.score);
 };
 
+const loadImage = (src) => {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    
+    const timeout = setTimeout(() => {
+      console.warn("Image loading timeout");
+      resolve(null);
+    }, 10000);
+    
+    img.onload = () => {
+      clearTimeout(timeout);
+      resolve(img);
+    };
+    
+    img.onerror = () => {
+      clearTimeout(timeout);
+      console.warn("Failed to load band image");
+      resolve(null);
+    };
+    
+    img.src = src;
+  });
+};
+
 const createPlaylist = async (token, bandName, spotifyId, matchPercentage) => {
   try {
     // Get user profile
@@ -589,9 +614,59 @@ const generateShareImage = async (band, matchPercentage, token) => {
       ctx.fillStyle = gradient;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      // Bright pattern overlay
+      // Load and draw band image
+      const bandImage = await loadImage(band.bandImage);
+      if (bandImage) {
+        // Create circular clipping mask for band image
+        const imageSize = 180;
+        const imageX = canvas.width - 220; // Position on right side
+        const imageY = 180;
+
+        ctx.save();
+        
+        // Create circular clip
+        ctx.beginPath();
+        ctx.arc(imageX, imageY, imageSize / 2, 0, Math.PI * 2);
+        ctx.clip();
+        
+        // Draw band image
+        ctx.drawImage(
+          bandImage, 
+          imageX - imageSize / 2, 
+          imageY - imageSize / 2, 
+          imageSize, 
+          imageSize
+        );
+        
+        ctx.restore();
+
+        // Add stylish border around the image
+        ctx.strokeStyle = "#ffffff";
+        ctx.lineWidth = 6;
+        ctx.beginPath();
+        ctx.arc(imageX, imageY, imageSize / 2 + 3, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // Add colored accent border
+        ctx.strokeStyle = `rgb(${colors.accent.r}, ${colors.accent.g}, ${colors.accent.b})`;
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.arc(imageX, imageY, imageSize / 2 + 8, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // Add subtle shadow/glow effect
+        ctx.save();
+        ctx.globalAlpha = 0.3;
+        ctx.fillStyle = `rgb(${colors.primary.r}, ${colors.primary.g}, ${colors.primary.b})`;
+        ctx.beginPath();
+        ctx.arc(imageX + 2, imageY + 2, imageSize / 2 + 12, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+
+      // Bright pattern overlay (adjusted to not overlap with image)
       ctx.fillStyle = `rgba(255, 255, 255, 0.15)`;
-      for (let i = 0; i < canvas.width; i += 30) {
+      for (let i = 0; i < canvas.width - 250; i += 30) { // Reduced width to avoid image area
         for (let j = 0; j < canvas.height; j += 30) {
           if (Math.random() > 0.8) {
             ctx.fillRect(i, j, 4, 4);
@@ -599,7 +674,7 @@ const generateShareImage = async (band, matchPercentage, token) => {
         }
       }
 
-      // Bright vinyl records
+      // Bright vinyl records (repositioned to work with image)
       const drawVinyl = (x, y, size, opacity) => {
         ctx.save();
         ctx.globalAlpha = opacity;
@@ -629,9 +704,9 @@ const generateShareImage = async (band, matchPercentage, token) => {
 
       drawVinyl(120, 120, 90, 0.7);
       drawVinyl(canvas.width - 120, canvas.height - 120, 70, 0.6);
-      drawVinyl(canvas.width - 180, 140, 50, 0.65);
+      drawVinyl(200, canvas.height - 80, 40, 0.5); // Moved third vinyl to avoid image
 
-      const centerX = canvas.width / 2;
+      const centerX = canvas.width / 2 - 50; // Shift text slightly left to balance with image
       const centerY = canvas.height / 2;
 
       ctx.miterLimit = 2;
@@ -655,7 +730,7 @@ const generateShareImage = async (band, matchPercentage, token) => {
       ctx.font = "bold 72px Arial, sans-serif";
       let fontSize = 72;
       while (
-        ctx.measureText(band.name.toUpperCase()).width > canvas.width - 200 &&
+        ctx.measureText(band.name.toUpperCase()).width > canvas.width - 400 && // Account for image space
         fontSize > 32
       ) {
         fontSize -= 4;
@@ -692,20 +767,20 @@ const generateShareImage = async (band, matchPercentage, token) => {
       ctx.fillStyle = "#ffffff"; // White text on dark background
       ctx.fillText(`${matchPercentage}% MATCH`, centerX, centerY + 130);
 
-      // Bottom text with strong contrast
+      // Bottom text with strong contrast (centered on full width)
       ctx.font = "28px Arial, sans-serif";
       ctx.strokeStyle = "rgba(0, 0, 0, 0.9)";
       ctx.lineWidth = 4;
-      ctx.strokeText("Find your must-see band at", centerX, canvas.height - 80);
+      ctx.strokeText("Find your must-see band at", canvas.width / 2, canvas.height - 80);
       ctx.fillStyle = "#ffffff";
-      ctx.fillText("Find your must-see band at", centerX, canvas.height - 80);
+      ctx.fillText("Find your must-see band at", canvas.width / 2, canvas.height - 80);
 
       ctx.font = "bold 36px Arial, sans-serif";
       ctx.strokeStyle = "rgba(0, 0, 0, 0.9)";
       ctx.lineWidth = 5;
-      ctx.strokeText("FAUX 8", centerX, canvas.height - 35);
+      ctx.strokeText("dullmace.lol", canvas.width / 2, canvas.height - 35);
       ctx.fillStyle = "#ffffff";
-      ctx.fillText("FAUX 8", centerX, canvas.height - 35);
+      ctx.fillText("dullmace.lol", canvas.width / 2, canvas.height - 35);
 
       canvas.toBlob(
         (blob) => {
