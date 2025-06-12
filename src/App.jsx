@@ -1387,11 +1387,6 @@ const TwinCard = ({ band, token }) => {
   return (
     <div className="result-card">
       <div className="card-header">
-        <img
-          src={band.bandImage}
-          alt={`Band photo of ${band.name}`}
-          className="band-image-corner"
-        />
         <div className="match-badge">
           <span className="match-percentage">{matchPercentage}% Match</span>
         </div>
@@ -1431,6 +1426,11 @@ const TwinCard = ({ band, token }) => {
           ))}
         </ul>
       </div>
+      <img
+        src={band.bandImage}
+        alt={`Band photo of ${band.name}`}
+        className="band-image-corner"
+      />
       <iframe
         src={`https://open.spotify.com/embed/artist/${spotifyId}?utm_source=generator&theme=0`}
         width="100%"
