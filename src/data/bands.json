@@ -1,0 +1,444 @@
+{
+    "bands": [
+      {
+        "name": "HOME IS WHERE",
+        "tier": "headliner",
+        "bandImage": "https://res.cloudinary.com/dmrkor9s4/image/upload/f_auto,q_auto/v1744593508/faux/bands/homeiswhere.png",
+        "bandGenre": "punk - country - emo - folk - midwest emo - screamo",
+        "bandLocation": "Palm Coast, Florida",
+        "listenLink": "https://faux.sdz.sh/homeiswhere",
+        "socialLink": "https://linktr.ee/homeiswhere",
+        "spotifyLink": "https://open.spotify.com/artist/1umUe3DQdjTkk0LoMuwcj2"
+      },
+      {
+        "name": "CARLY COSGROVE",
+        "tier": "headliner",
+        "bandGenre": "alt rock- emo - indie - indie punk - punk",
+        "bandLocation": "Philadelphia, Pennsylvania",
+        "bandImage": "https://res.cloudinary.com/dmrkor9s4/image/upload/f_auto,q_auto/v1744593508/faux/bands/carlycosgrove.png",
+        "listenLink": "https://faux.sdz.sh/carlycosgrove",
+        "socialLink": "https://carlycosgrove.komi.io/",
+        "spotifyLink": "https://open.spotify.com/artist/4h3DxZa1JxZhSB1a64ziKx"
+      },
+      {
+        "name": "AWAKEBUTSTILLINBED",
+        "tier": "tier-two",
+        "bandGenre": "punk - emo - screamo",
+        "bandLocation": "Berkeley, California",
+        "bandImage": "https://res.cloudinary.com/dmrkor9s4/image/upload/f_auto,q_auto/v1744593508/faux/bands/awakebutstillinbed.png",
+        "listenLink": "https://faux.sdz.sh/awakebutstillinbed",
+        "socialLink": "https://linktr.ee/awakebutstillinbed",
+        "spotifyLink": "https://open.spotify.com/artist/0NvYpRJfbFyOI4QdsLJ1Jw"
+      },
+      {
+        "name": "EQUIPMENT",
+        "tier": "tier-two",
+        "bandGenre": "pop punk - alt rock - bummer emo - indie rock - power pop",
+        "bandLocation": "Toledo, Ohio",
+        "bandImage": "https://res.cloudinary.com/dmrkor9s4/image/upload/f_auto,q_auto/v1744593508/faux/bands/equipment.png",
+        "listenLink": "https://faux.sdz.sh/equipment",
+        "socialLink": "https://linktr.ee/equipmentband",
+        "spotifyLink": "https://open.spotify.com/artist/1xxn3mhlUmOugl1ZhE0Mcx"
+      },
+      {
+        "name": "EKKO ASTRAL",
+        "tier": "tier-two",
+        "bandGenre": "bubblegrunge - noise rock - post-hardcore - post punk",
+        "bandLocation": "Washington, D.C.",
+        "bandImage": "https://res.cloudinary.com/dmrkor9s4/image/upload/f_auto,q_auto/v1744593508/faux/bands/ekkoastral.png",
+        "listenLink": "https://faux.sdz.sh/ekkoastral",
+        "socialLink": "https://x.com/ekkoastral",
+        "spotifyLink": "https://open.spotify.com/artist/5YaWzI756w0pw1DkJkun5u"
+      },
+      {
+        "name": "KEEP FOR CHEAP",
+        "tier": "tier-two",
+        "bandGenre": "alt - folk rock - indie - indie rock ",
+        "bandLocation": "Minneapolis, Minnesota",
+        "bandImage": "https://res.cloudinary.com/dmrkor9s4/image/upload/f_auto,q_auto/v1744593508/faux/bands/keepforcheap.png",
+        "listenLink": "https://faux.sdz.sh/keepforcheap",
+        "socialLink": "https://linktr.ee/keepforcheap",
+        "spotifyLink": "https://open.spotify.com/artist/6YKwoZUW4g50TuiyvVz7JR"
+      },
+      {
+        "name": "KEROSENE HEIGHTS",
+        "tier": "tier-two",
+        "bandGenre": "pop punk - punk - emo - hardcore - midwest emo",
+        "bandLocation": "Asheville, North Carolina",
+        "bandImage": "https://res.cloudinary.com/dmrkor9s4/image/upload/f_auto,q_auto/v1744593508/faux/bands/keroseneheights.png",
+        "listenLink": "https://faux.sdz.sh/keroseneheights",
+        "socialLink": "https://linktr.ee/keroseneheights",
+        "spotifyLink": "https://open.spotify.com/artist/0D4NkuZAkjfdm5clMtYYrz"
+      },
+      {
+        "name": "PRETTY BITTER",
+        "tier": "tier-two",
+        "bandGenre": "pop - dream pop - indie - indie pop - indie rock",
+        "bandLocation": "Washington, D.C.",
+        "bandImage": "https://res.cloudinary.com/dmrkor9s4/image/upload/f_auto,q_auto/v1744593508/faux/bands/prettybitter.png",
+        "listenLink": "https://faux.sdz.sh/prettybitter",
+        "socialLink": "https://linktr.ee/PrettyBitter",
+        "spotifyLink": "https://open.spotify.com/artist/5Nla9Hl2tGnEJgM3fPodoh"
+      },
+      {
+        "name": "RED SUN",
+        "tier": "tier-two",
+        "bandGenre": "alt rock - emo - punk",
+        "bandLocation": "Oklahoma City, OK",
+        "bandImage": "https://res.cloudinary.com/dmrkor9s4/image/upload/f_auto,q_auto/v1744593508/faux/bands/redsun.png",
+        "listenLink": "https://faux.sdz.sh/redsun",
+        "socialLink": "https://linktr.ee/redsun405",
+        "spotifyLink": "https://open.spotify.com/artist/2EBOAZfR66SwpO9mGKsaul"
+      },
+      {
+        "name": "SUMMERBRUISE",
+        "tier": "tier-two",
+        "bandGenre": "pop punk - punk - emo - indie rock",
+        "bandLocation": "Indianapolis, Indiana",
+        "bandImage": "https://res.cloudinary.com/dmrkor9s4/image/upload/f_auto,q_auto/v1744593508/faux/bands/summerbruise.png",
+        "listenLink": "https://faux.sdz.sh/summerbruise",
+        "socialLink": "https://linktr.ee/summerbruise69",
+        "spotifyLink": "https://open.spotify.com/artist/7dlw6SU2bPJj7kjKKMjhA5"
+      },
+      {
+        "name": "TINY VOICES",
+        "tier": "tier-two",
+        "bandGenre": "pop punk - emo - midwest emo - sparklepunk",
+        "bandLocation": "Oshkosh, Wisconsin",
+        "bandImage": "https://res.cloudinary.com/dmrkor9s4/image/upload/f_auto,q_auto/v1744593508/faux/bands/tinyvoices.png",
+        "listenLink": "https://faux.sdz.sh/tinyvoices",
+        "socialLink": "https://linktr.ee/TinyVoices",
+        "spotifyLink": "https://open.spotify.com/artist/09slOICvQXnXEGDUSjmEaD"
+      },
+      {
+        "name": "32 BIT OPERATOR",
+        "tier": "tier-three",
+        "bandGenre": "punk",
+        "bandLocation": "Great Lakes Region",
+        "bandImage": "https://res.cloudinary.com/dmrkor9s4/image/upload/f_auto,q_auto/v1744593508/faux/bands/32bitoperator.png",
+        "listenLink": "https://faux.sdz.sh/32bitoperator",
+        "socialLink": "https://x.com/32BitOppo",
+        "spotifyLink": ""
+      },
+      {
+        "name": "95COROLLA",
+        "tier": "tier-three",
+        "bandGenre": "punk - alt rock - emo",
+        "bandLocation": "Nashville, Tennessee",
+        "bandImage": "https://res.cloudinary.com/dmrkor9s4/image/upload/f_auto,q_auto/v1744593508/faux/bands/95corolla.png",
+        "listenLink": "https://faux.sdz.sh/95COROLLA",
+        "socialLink": "https://diyemo.autos/",
+        "spotifyLink": "https://open.spotify.com/artist/5D4wsSrMcfjWtP86jZQ5fI"
+      },
+      {
+        "name": "BOTTOM BRACKET",
+        "tier": "tier-three",
+        "bandGenre": " punk rock - emo - indie rock - math rock - sparklepunk",
+        "bandLocation": "Chicago, Illinois",
+        "bandImage": "https://res.cloudinary.com/dmrkor9s4/image/upload/f_auto,q_auto/v1744593508/faux/bands/bottombracket.png",
+        "listenLink": "https://faux.sdz.sh/bottombracket",
+        "socialLink": "https://linktr.ee/btmbrkt",
+        "spotifyLink": "https://open.spotify.com/artist/7n7y0AnByWuVtJbx99EYyw"
+      },
+      {
+        "name": "BOY CLOTHES",
+        "tier": "tier-three",
+        "bandGenre": "punk - emo",
+        "bandLocation": "Nashville, Tennessee",
+        "bandImage": "https://res.cloudinary.com/dmrkor9s4/image/upload/f_auto,q_auto/v1744593508/faux/bands/boyclothes.png",
+        "listenLink": "https://faux.sdz.sh/boyclothes",
+        "socialLink": "https://x.com/boyclothesband",
+        "spotifyLink": "https://open.spotify.com/artist/3xaeTvv1QGKHL93FTgztVC"
+      },
+      {
+        "name": "BRAIN WEASELS",
+        "tier": "tier-three",
+        "bandGenre": "acoustic emo",
+        "bandLocation": "Northwest Ohio ",
+        "bandImage": "https://res.cloudinary.com/dmrkor9s4/image/upload/f_auto,q_auto/v1744593508/faux/bands/brainweasels.png",
+        "listenLink": "https://faux.sdz.sh/brainweasels",
+        "socialLink": "https://www.instagram.com/brainweaselsband/?hl=en",
+        "spotifyLink": "https://open.spotify.com/artist/0adxiiCmCtSBOiQiSMZN6z"
+      },
+      {
+        "name": "CAREER DAY",
+        "tier": "tier-three",
+        "bandGenre": "emo - melodic punk - pop punk - punk",
+        "bandLocation": "Queens, New York",
+        "bandImage": "https://res.cloudinary.com/dmrkor9s4/image/upload/f_auto,q_auto/v1744593508/faux/bands/careerday.png",
+        "listenLink": "https://faux.sdz.sh/careerday",
+        "socialLink": "https://linktr.ee/careerdayny",
+        "spotifyLink": "https://open.spotify.com/artist/72JXanCAxM5bbkSltz2EA1"
+      },
+      {
+        "name": "CINEMA STARE",
+        "tier": "tier-three",
+        "bandGenre": "emo - pop punk",
+        "bandLocation": "Connecticut",
+        "bandImage": "https://res.cloudinary.com/dmrkor9s4/image/upload/f_auto,q_auto/v1744593508/faux/bands/cinemastare.png",
+        "listenLink": "https://faux.sdz.sh/cinemastare",
+        "socialLink": "https://linktr.ee/cinemastare",
+        "spotifyLink": "https://open.spotify.com/artist/14v9fqvtGdxFYVuvaJLuM0"
+      },
+      {
+        "name": "CLIPBOARDS",
+        "tier": "tier-three",
+        "bandGenre": "emo - indie - post hardcore - alt rock",
+        "bandLocation": "East Lansing, Michigan",
+        "bandImage": "https://res.cloudinary.com/dmrkor9s4/image/upload/f_auto,q_auto/v1744593508/faux/bands/clipboards.png",
+        "listenLink": "https://faux.sdz.sh/clipboards",
+        "socialLink": "https://linktr.ee/clipboards_mi",
+        "spotifyLink": "https://open.spotify.com/artist/2W0eDujlxWH6r88PbP9AaX"
+      },
+      {
+        "name": "DEAR MARYANNE",
+        "tier": "tier-three",
+        "bandGenre": "pop punk - emo",
+        "bandLocation": "Boston, Massachusetts",
+        "bandImage": "https://res.cloudinary.com/dmrkor9s4/image/upload/f_auto,q_auto/v1744593508/faux/bands/dearmaryanne.png",
+        "listenLink": "https://faux.sdz.sh/dearmaryanne",
+        "socialLink": "https://linktr.ee/dearmaryanne",
+        "spotifyLink": "https://open.spotify.com/artist/7C04Hg3t3Q0sTLw5raMMP8"
+      },
+      {
+        "name": "ECHO",
+        "tier": "tier-three",
+        "bandGenre": "emo - punk",
+        "bandLocation": "Indianapolis, Indiana",
+        "bandImage": "https://res.cloudinary.com/dmrkor9s4/image/upload/f_auto,q_auto/v1744593508/faux/bands/echo.png",
+        "listenLink": "https://faux.sdz.sh/echo",
+        "socialLink": "https://www.instagram.com/echoisaband/",
+        "spotifyLink": "https://open.spotify.com/artist/0wQa5yWB89wSm6jmbxOqIQ"
+      },
+      {
+        "name": "ELLIE HART",
+        "tier": "tier-three",
+        "bandGenre": "music",
+        "bandLocation": "Ohio",
+        "bandImage": "https://res.cloudinary.com/dmrkor9s4/image/upload/f_auto,q_auto/v1744593508/faux/bands/elliehart.png",
+        "listenLink": "https://faux.sdz.sh/elliehart",
+        "socialLink": "https://x.com/ellie_hart_tho",
+        "spotifyLink": "https://open.spotify.com/artist/0f8dzi1IhOyiuAmM5TXQHm"
+      },
+      {
+        "name": "FEND",
+        "tier": "tier-three",
+        "bandGenre": "alt rock- indie rock - emo - indie pop",
+        "bandLocation": "Minneapolis, Minnesota",
+        "bandImage": "https://res.cloudinary.com/dmrkor9s4/image/upload/f_auto,q_auto/v1744593508/faux/bands/fend.png",
+        "listenLink": "https://faux.sdz.sh/fend",
+        "socialLink": "https://x.com/fendtheband",
+        "spotifyLink": "https://open.spotify.com/artist/4MLTC4zcipIQrNBTUqjgcm"
+      },
+      {
+        "name": "FETCH QUEST",
+        "tier": "tier-three",
+        "bandGenre": "who knows - music - tunes - emo",
+        "bandLocation": "Chicago, Illinois",
+        "bandImage": "https://res.cloudinary.com/dmrkor9s4/image/upload/f_auto,q_auto/v1744593508/faux/bands/fetchquest.png",
+        "listenLink": "",
+        "socialLink": "https://x.com/FetchQuestChi",
+        "spotifyLink": ""
+      },
+      {
+        "name": "FINALBOSSFIGHT!",
+        "tier": "tier-three",
+        "bandGenre": "alt rock - pop punk - punk rock - emo",
+        "bandLocation": "Flint, Michigan",
+        "bandImage": "https://res.cloudinary.com/dmrkor9s4/image/upload/f_auto,q_auto/v1744593508/faux/bands/finalbossfight.png",
+        "listenLink": "https://faux.sdz.sh/finalbossfight",
+        "socialLink": "https://x.com/FinalBossFight1",
+        "spotifyLink": "https://open.spotify.com/artist/56SGmycHilSn2JzJfaKSww"
+      },
+      {
+        "name": "GET TUFF",
+        "tier": "tier-three",
+        "bandGenre": "melodramatic pop - pop dark - synthpop",
+        "bandLocation": "Lansing, Michigan",
+        "bandImage": "https://res.cloudinary.com/dmrkor9s4/image/upload/f_auto,q_auto/v1744593508/faux/bands/gettuff.png",
+        "listenLink": "https://faux.sdz.sh/gettuff",
+        "socialLink": "https://x.com/gettuffstaytuff",
+        "spotifyLink": "https://open.spotify.com/artist/3uA4mUI9kQS9b7muYR48Sy"
+      },
+      {
+        "name": "HAUNT DOG",
+        "tier": "tier-three",
+        "bandGenre": "alt - punk - emo - math rock - midwest emo",
+        "bandLocation": "Philadelphia, Pennsylvania",
+        "bandImage": "https://res.cloudinary.com/dmrkor9s4/image/upload/f_auto,q_auto/v1744593508/faux/bands/hauntdog.png",
+        "listenLink": "https://faux.sdz.sh/hauntdog",
+        "socialLink": "https://linktr.ee/hauntdogphl",
+        "spotifyLink": "https://open.spotify.com/artist/5M9lC5eDdlfmWwMxEzGuDe"
+      },
+      {
+        "name": "HECCRA",
+        "tier": "tier-three",
+        "bandGenre": "alt - metalcore - emo - post hardcore",
+        "bandLocation": "Kansas City, Missouri",
+        "bandImage": "https://res.cloudinary.com/dmrkor9s4/image/upload/f_auto,q_auto/v1744593508/faux/bands/heccra.png",
+        "listenLink": "https://faux.sdz.sh/heccra",
+        "socialLink": "https://linktr.ee/heccra",
+        "spotifyLink": "https://open.spotify.com/artist/3BuXU3l4cME0qzyXgLawKf"
+      },
+      {
+        "name": "LATERGATOR",
+        "tier": "tier-three",
+        "bandGenre": "midwest emo",
+        "bandLocation": "Indianapolis, Indiana",
+        "bandImage": "https://res.cloudinary.com/dmrkor9s4/image/upload/f_auto,q_auto/v1744593508/faux/bands/latergator.png",
+        "listenLink": "https://faux.sdz.sh/latergator",
+        "socialLink": "https://x.com/latergatorband",
+        "spotifyLink": "https://open.spotify.com/artist/7JDU6MPBaQsffgv475szMD"
+      },
+      {
+        "name": "LEISURE HOUR",
+        "tier": "tier-three",
+        "bandGenre": "pop punk - alt rock - emo",
+        "bandLocation": "Muncie, Indiana",
+        "bandImage": "https://res.cloudinary.com/dmrkor9s4/image/upload/f_auto,q_auto/v1744593508/faux/bands/leisurehour.png",
+        "listenLink": "https://faux.sdz.sh/leisurehour",
+        "socialLink": "https://refresh.jyfl.link/sunnyside",
+        "spotifyLink": "https://open.spotify.com/artist/6vkFadDv74nN00rZRrVbrN"
+      },
+      {
+        "name": "MOOSECREEK PARK",
+        "tier": "tier-three",
+        "bandGenre": " math rock - midwest emo - pop punk - shoegaze",
+        "bandLocation": "Long Island, New York",
+        "bandImage": "https://res.cloudinary.com/dmrkor9s4/image/upload/f_auto,q_auto/v1744593508/faux/bands/moosecreekpark.png",
+        "listenLink": "https://faux.sdz.sh/moosecreekpark",
+        "socialLink": "https://moosecreekpark.com/",
+        "spotifyLink": "https://open.spotify.com/artist/0fDkJta7XRi6eDBgLDRP4f"
+      },
+      {
+        "name": "MUD WHALE",
+        "tier": "tier-three",
+        "bandGenre": " alt rock - emo - grunge - post hardcore - punk",
+        "bandLocation": "Cleveland, Ohio",
+        "bandImage": "https://res.cloudinary.com/dmrkor9s4/image/upload/f_auto,q_auto/v1744593508/faux/bands/mudwhale.png",
+        "listenLink": "https://faux.sdz.sh/mudwhale",
+        "socialLink": "https://linktr.ee/MudWhale",
+        "spotifyLink": "https://open.spotify.com/artist/6kvtwZKMwZZopBGqlHZPNE"
+      },
+      {
+        "name": "NICOTEENS",
+        "tier": "tier-three",
+        "bandGenre": "alt - emo - indie rock - pop punk - power pop",
+        "bandLocation": "Boston, Massachusetts",
+        "bandImage": "https://res.cloudinary.com/dmrkor9s4/image/upload/f_auto,q_auto/v1744593508/faux/bands/nicoteens.png",
+        "listenLink": "https://faux.sdz.sh/nicoteens",
+        "socialLink": "https://x.com/Nicoteensmusic",
+        "spotifyLink": "https://open.spotify.com/artist/4tqh9XQwYNTWwRmpRdp9d1"
+      },
+      {
+        "name": "OK CUDDLE",
+        "tier": "tier-three",
+        "bandGenre": "emo - punk",
+        "bandLocation": "Brooklyn, New York",
+        "bandImage": "https://res.cloudinary.com/dmrkor9s4/image/upload/f_auto,q_auto/v1744593508/faux/bands/okcuddle.png",
+        "listenLink": "https://faux.sdz.sh/okcuddle",
+        "socialLink": "https://linktr.ee/unclepizza",
+        "spotifyLink": "https://open.spotify.com/artist/1EprKWiFETUd47IFWI2voB"
+      },
+      {
+        "name": "ROOKIE PARK",
+        "tier": "tier-three",
+        "bandGenre": " pop punk - emo - indie rock - pop punk",
+        "bandLocation": "Austin, Texas",
+        "bandImage": "https://res.cloudinary.com/dmrkor9s4/image/upload/f_auto,q_auto/v1744593508/faux/bands/rookiepark.png",
+        "listenLink": "https://faux.sdz.sh/rookiepark",
+        "socialLink": "https://x.com/rookieparktx",
+        "spotifyLink": "https://open.spotify.com/artist/3X5dnfWpZJX5dy0vfg8JAT"
+      },
+      {
+        "name": "STRELITZIA",
+        "tier": "tier-three",
+        "bandGenre": "emo - math rock - midwest emo - post hardcore - post rock",
+        "bandLocation": "Gilbert, Arizona",
+        "bandImage": "https://res.cloudinary.com/dmrkor9s4/image/upload/f_auto,q_auto/v1744593508/faux/bands/strelitzia.png",
+        "listenLink": "https://faux.sdz.sh/strelitzia",
+        "socialLink": "https://linktr.ee/strelitziaaz",
+        "spotifyLink": "https://open.spotify.com/artist/2pKrf2SsVOGY29eSA3uqkK"
+      },
+      {
+        "name": "THE DARTMOORS",
+        "tier": "tier-three",
+        "bandGenre": "basement rock - garage rock - indie rock - pop rock",
+        "bandLocation": "Rochester Hills, Michigan",
+        "bandImage": "https://res.cloudinary.com/dmrkor9s4/image/upload/f_auto,q_auto/v1744593508/faux/bands/thedartmoors.png",
+        "listenLink": "https://faux.sdz.sh/thedartmoors",
+        "socialLink": "https://linktr.ee/thedartmoorsband",
+        "spotifyLink": "https://open.spotify.com/artist/702eGfjjG4hvKGbkP3ZZpf"
+      },
+      {
+        "name": "TOPIARY CREATURES",
+        "tier": "tier-three",
+        "bandGenre": "alt rock - chiptune - dreamo - emo - post rock - punk",
+        "bandLocation": "Nashville, Tennessee",
+        "bandImage": "https://res.cloudinary.com/dmrkor9s4/image/upload/f_auto,q_auto/v1744593508/faux/bands/topiarycreatures.png",
+        "listenLink": "https://faux.sdz.sh/topiarycreatures",
+        "socialLink": "https://linktr.ee/topiarycreatures",
+        "spotifyLink": "https://open.spotify.com/artist/6E4UJvgq8Z9M1NUQ2xTLn7"
+      },
+      {
+        "name": "ULTRA DELUXE",
+        "tier": "tier-three",
+        "bandGenre": "experimental - bedroom pop - chiptune - post rock",
+        "bandLocation": "New York, New York",
+        "bandImage": "https://res.cloudinary.com/dmrkor9s4/image/upload/f_auto,q_auto/v1744593508/faux/bands/ultradeluxe.png",
+        "listenLink": "https://faux.sdz.sh/ultradeluxe",
+        "socialLink": "https://linktr.ee/UltraDeluxe",
+        "spotifyLink": "https://open.spotify.com/artist/2VXgsXfSsMEF05jlPR90e7"
+      },
+      {
+        "name": "WAVING",
+        "tier": "tier-three",
+        "bandGenre": "emo",
+        "bandLocation": "Ohio",
+        "bandImage": "https://res.cloudinary.com/dmrkor9s4/image/upload/f_auto,q_auto/v1744593508/faux/bands/waving.png",
+        "listenLink": "https://faux.sdz.sh/",
+        "socialLink": "https://linktr.ee/wavingband",
+        "spotifyLink": "https://open.spotify.com/artist/5fFJtAUKz4FbplhVoxlIA4"
+      },
+      {
+        "name": "WISE DISGUISE",
+        "tier": "tier-three",
+        "bandGenre": "midwest emo - punk",
+        "bandLocation": "Collinsville, Illinois",
+        "bandImage": "https://res.cloudinary.com/dmrkor9s4/image/upload/f_auto,q_auto/v1744593508/faux/bands/wisedisguise.png",
+        "listenLink": "https://faux.sdz.sh/wisedisguise",
+        "socialLink": "https://linktr.ee/wisedisguise",
+        "spotifyLink": "https://open.spotify.com/artist/58U2HlUR97CZymxySdaMLD"
+      },
+      {
+        "name": "PALETTE KNIFE",
+        "tier": "tier-three",
+        "bandGenre": "pop punk - midwest emo - punk",
+        "bandLocation": "Columbus, Ohio",
+        "bandImage": "https://f4.bcbits.com/img/0031143421_10.jpg",
+        "listenLink": "https://linktr.ee/paletteknifeband",
+        "socialLink": "https://linktr.ee/paletteknifeband",
+        "spotifyLink": "https://open.spotify.com/artist/2NjNeRA9xtah9fJGCQOxNf"
+      },      
+      {
+        "name": "HEMMINGWAY LANE",
+        "tier": "tier-three",
+        "bandGenre": "indie pop - dream pop",
+        "bandLocation": "Washington, D.C.",
+        "bandImage": "https://f4.bcbits.com/img/0035866452_10.jpg",
+        "listenLink": "https://linktr.ee/HemmingwayLane",
+        "socialLink": "https://linktr.ee/HemmingwayLane",
+        "spotifyLink": "https://open.spotify.com/artist/3pBwv7FrSuqkvLyZjqSPvp"
+      },     
+      {
+        "name": "MONSTERTRUCK FIRETRUCK",
+        "tier": "tier-three",
+        "bandGenre": "punk",
+        "bandLocation": "Burlington, New Jersey",
+        "bandImage": "https://f4.bcbits.com/img/0035869163_10.jpg",
+        "listenLink": "https://distrokid.com/hyperfollow/monstertruckfiretruck/firetruck",
+        "socialLink": "https://www.instagram.com/monstertruck_firetruck/",
+        "spotifyLink": "https://open.spotify.com/artist/7iYw91D9WYGgK7rTf3XYQX"
+      } 
+    ]
+  }
