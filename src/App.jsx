@@ -589,9 +589,28 @@ const getAlbumArtFromSpotify = async (token, spotifyId) => {
   return null;
 };
 
+const preloadFonts = async () => {
+  const fonts = [
+    'Arial',
+    'sans-serif',
+    'Arial, sans-serif'
+  ];
+  
+  if (document.fonts) {
+    try {
+      await document.fonts.ready;
+      console.log("Fonts loaded successfully");
+    } catch (error) {
+      console.warn("Font loading failed:", error);
+    }
+  }
+};
+
 const generateShareImage = async (band, matchPercentage, token, userProfile = null) => {
   return new Promise(async (resolve) => {
     try {
+      await preloadFonts(); 
+      
       console.log("Starting share image generation for:", band.name);
       
       const canvas = document.createElement("canvas");
