@@ -581,7 +581,7 @@ const getAlbumArtFromSpotify = async (token, spotifyId) => {
   return null;
 };
 
-const generateShareImage = async (band, matchPercentage, token) => {
+const generateShareImage = async (band, matchPercentage, token, userProfile = null) => {
   return new Promise(async (resolve) => {
     try {
       const canvas = document.createElement("canvas");
@@ -604,9 +604,8 @@ const generateShareImage = async (band, matchPercentage, token) => {
         }
       }
 
-      // Create a more dynamic gradient with multiple stops
       const gradient = ctx.createRadialGradient(
-        canvas.width * 0.3, canvas.height * 0.3, 0,
+        canvas.width * 0.3, canvas.width * 0.3, 0,
         canvas.width * 0.7, canvas.height * 0.7, canvas.width
       );
       gradient.addColorStop(0, `rgba(${colors.primary.r}, ${colors.primary.g}, ${colors.primary.b}, 0.9)`);
@@ -617,37 +616,113 @@ const generateShareImage = async (band, matchPercentage, token) => {
       ctx.fillStyle = gradient;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      // Add some noise/texture for that DIY aesthetic
-      ctx.fillStyle = `rgba(255, 255, 255, 0.08)`;
-      for (let i = 0; i < canvas.width; i += 3) {
-        for (let j = 0; j < canvas.height; j += 3) {
-          if (Math.random() > 0.92) {
-            ctx.fillRect(i, j, 2, 2);
+      ctx.fillStyle = `rgba(255, 255, 255, 0.12)`;
+      for (let i = 0; i < canvas.width; i += 2) {
+        for (let j = 0; j < canvas.height; j += 2) {
+          if (Math.random() > 0.88) {
+            ctx.fillRect(i, j, Math.random() > 0.5 ? 1 : 2, Math.random() > 0.5 ? 1 : 2);
           }
         }
       }
 
-      // Load and draw band image - MUCH LARGER NOW
+      ctx.strokeStyle = `rgba(255, 255, 255, 0.06)`;
+      ctx.lineWidth = 1;
+      for (let i = 0; i < 20; i++) {
+        const startX = Math.random() * canvas.width;
+        const startY = Math.random() * canvas.height;
+        const length = 50 + Math.random() * 100;
+        const angle = Math.random() * Math.PI * 2;
+        
+        ctx.beginPath();
+        ctx.moveTo(startX, startY);
+        ctx.lineTo(startX + Math.cos(angle) * length, startY + Math.sin(angle) * length);
+        ctx.stroke();
+      }
+
+      ctx.fillStyle = `rgba(0, 0, 0, 0.08)`;
+      for (let i = 0; i < 15; i++) {
+        const x = Math.random() * canvas.width;
+        const y = Math.random() * canvas.height;
+        const size = 10 + Math.random() * 30;
+        
+        ctx.save();
+        ctx.globalAlpha = 0.3;
+        ctx.beginPath();
+        ctx.arc(x, y, size, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+
+      ctx.fillStyle = `rgba(${colors.accent.r}, ${colors.accent.g}, ${colors.accent.b}, 0.15)`;
+      for (let i = 0; i < 8; i++) {
+        const x = Math.random() * canvas.width;
+        const y = Math.random() * canvas.height;
+        const size = 5 + Math.random() * 15;
+        
+        ctx.save();
+        ctx.globalAlpha = 0.4;
+        ctx.beginPath();
+        ctx.arc(x, y, size, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+
+      if (userProfile && userProfile.images && userProfile.images.length > 0) {
+        const userImage = await loadImage(userProfile.images[0].url);
+        if (userImage) {
+          const userImageSize = 80;
+          const userImageX = 60;
+          const userImageY = 60;
+
+          ctx.save();
+          
+          ctx.beginPath();
+          ctx.arc(userImageX, userImageY, userImageSize / 2, 0, Math.PI * 2);
+          ctx.clip();
+          
+          ctx.drawImage(
+            userImage, 
+            userImageX - userImageSize / 2, 
+            userImageY - userImageSize / 2, 
+            userImageSize, 
+            userImageSize
+          );
+          
+          ctx.restore();
+
+          ctx.strokeStyle = "#ffffff";
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.arc(userImageX, userImageY, userImageSize / 2 + 2, 0, Math.PI * 2);
+          ctx.stroke();
+
+          ctx.font = "600 18px 'Oswald', sans-serif";
+          ctx.textAlign = "left";
+          ctx.strokeStyle = "rgba(0, 0, 0, 0.9)";
+          ctx.lineWidth = 3;
+          ctx.strokeText(`@${userProfile.display_name || userProfile.id}`, 20, 130);
+          ctx.fillStyle = "#ffffff";
+          ctx.fillText(`@${userProfile.display_name || userProfile.id}`, 20, 130);
+        }
+      }
+
       const bandImage = await loadImage(band.bandImage);
       if (bandImage) {
-        const imageSize = 280; // Increased from 200
-        const imageX = canvas.width - 180; // Adjusted positioning
-        const imageY = 200;
+        const imageSize = 280;
+        const imageX = canvas.width - 180;
+        const imageY = 280;
 
         ctx.save();
         
-        // Add a glowing effect behind the image
         ctx.shadowColor = `rgba(${colors.accent.r}, ${colors.accent.g}, ${colors.accent.b}, 0.6)`;
         ctx.shadowBlur = 25;
         ctx.shadowOffsetX = 0;
         ctx.shadowOffsetY = 0;
         
-        // Create circular clip
         ctx.beginPath();
         ctx.arc(imageX, imageY, imageSize / 2, 0, Math.PI * 2);
         ctx.clip();
         
-        // Draw band image
         ctx.drawImage(
           bandImage, 
           imageX - imageSize / 2, 
@@ -658,7 +733,6 @@ const generateShareImage = async (band, matchPercentage, token) => {
         
         ctx.restore();
 
-        // Add multiple stylish borders
         ctx.strokeStyle = "#ffffff";
         ctx.lineWidth = 5;
         ctx.beginPath();
@@ -672,14 +746,12 @@ const generateShareImage = async (band, matchPercentage, token) => {
         ctx.stroke();
       }
 
-      // Enhanced vinyl records with better positioning (adjusted for larger image)
       const drawVinyl = (x, y, size, opacity, rotation = 0) => {
         ctx.save();
         ctx.globalAlpha = opacity;
         ctx.translate(x, y);
         ctx.rotate(rotation);
         
-        // Vinyl base with gradient
         const vinylGradient = ctx.createRadialGradient(0, 0, 0, 0, 0, size);
         vinylGradient.addColorStop(0, `rgba(${colors.secondary.r}, ${colors.secondary.g}, ${colors.secondary.b}, 0.3)`);
         vinylGradient.addColorStop(1, `rgba(${colors.primary.r}, ${colors.primary.g}, ${colors.primary.b}, 0.2)`);
@@ -689,7 +761,6 @@ const generateShareImage = async (band, matchPercentage, token) => {
         ctx.arc(0, 0, size, 0, Math.PI * 2);
         ctx.fill();
 
-        // Multiple grooves with varying opacity
         for (let radius = size * 0.2; radius < size; radius += size * 0.08) {
           ctx.strokeStyle = `rgba(255, 255, 255, ${0.3 - (radius / size) * 0.2})`;
           ctx.lineWidth = 1;
@@ -698,7 +769,6 @@ const generateShareImage = async (band, matchPercentage, token) => {
           ctx.stroke();
         }
 
-        // Center with accent color
         ctx.fillStyle = `rgba(${colors.accent.r}, ${colors.accent.g}, ${colors.accent.b}, 0.8)`;
         ctx.beginPath();
         ctx.arc(0, 0, size * 0.12, 0, Math.PI * 2);
@@ -707,18 +777,17 @@ const generateShareImage = async (band, matchPercentage, token) => {
         ctx.restore();
       };
 
-      drawVinyl(100, 100, 80, 0.6, 0.3);
+      drawVinyl(200, 100, 60, 0.5, 0.3);
       drawVinyl(canvas.width - 100, canvas.height - 100, 60, 0.5, -0.5);
       drawVinyl(150, canvas.height - 80, 35, 0.4, 1.2);
 
-      const centerX = canvas.width / 2 - 100; // Adjusted for larger image
-      const centerY = canvas.height / 2;
+      const centerX = canvas.width / 2 - 100;
+      const centerY = canvas.height / 2 - 40;
 
       ctx.miterLimit = 2;
       ctx.lineJoin = "round";
       ctx.lineCap = "round";
       
-      // WAY MORE FUN hype phrases
       const hypeTexts = [
         "BOUT TO GO FERAL FOR",
         "READY TO CRY-SING WITH", 
@@ -736,55 +805,53 @@ const generateShareImage = async (band, matchPercentage, token) => {
       
       const selectedHype = hypeTexts[Math.floor(Math.random() * hypeTexts.length)];
       
-      // Hype text with maximum contrast
       ctx.textAlign = "center";
       
       ctx.strokeStyle = "rgba(0, 0, 0, 0.95)";
       ctx.lineWidth = 5;
-      ctx.font = "bold 32px Arial, sans-serif";
-      ctx.strokeText(selectedHype, centerX, 100);
+      ctx.font = "700 32px 'Oswald', sans-serif";
+      ctx.strokeText(selectedHype, centerX, 160);
       
       ctx.fillStyle = "#ffffff";
-      ctx.fillText(selectedHype, centerX, 100);
+      ctx.fillText(selectedHype, centerX, 160);
 
-      // Band name with even more impact
-      ctx.font = "bold 84px Arial, sans-serif";
+      ctx.font = "400 84px 'Bebas Neue', sans-serif";
       let fontSize = 84;
       while (
-        ctx.measureText(band.name.toUpperCase()).width > canvas.width - 500 && // Adjusted for larger image
+        ctx.measureText(band.name.toUpperCase()).width > canvas.width - 500 &&
         fontSize > 36
       ) {
         fontSize -= 4;
-        ctx.font = `bold ${fontSize}px Arial, sans-serif`;
+        ctx.font = `400 ${fontSize}px 'Bebas Neue', sans-serif`;
       }
 
-      // Multiple shadow layers for depth
       ctx.strokeStyle = "rgba(0, 0, 0, 0.8)";
       ctx.lineWidth = 12;
-      ctx.strokeText(band.name.toUpperCase(), centerX + 2, centerY + 2);
+      ctx.strokeText(band.name.toUpperCase(), centerX + 2, centerY - 20);
       
       ctx.strokeStyle = "rgba(0, 0, 0, 0.95)";
       ctx.lineWidth = 8;
-      ctx.strokeText(band.name.toUpperCase(), centerX, centerY);
+      ctx.strokeText(band.name.toUpperCase(), centerX, centerY - 20);
       
       ctx.fillStyle = "#ffffff";
-      ctx.fillText(band.name.toUpperCase(), centerX, centerY);
+      ctx.fillText(band.name.toUpperCase(), centerX, centerY - 20);
 
-      // Location with better styling
-      ctx.font = "28px Arial, sans-serif";
-      ctx.strokeStyle = "rgba(0, 0, 0, 0.9)";
-      ctx.lineWidth = 4;
-      ctx.strokeText(`AT FAUX 8`, centerX, centerY + 50);
-      ctx.fillStyle = "#ffffff";
-      ctx.fillText(`AT FAUX 8`, centerX, centerY + 50);
+      const fauxLogo = await loadImage("https://res.cloudinary.com/dmrkor9s4/image/upload/v1749730814/atfaux8_dl5dzn.png");
+      if (fauxLogo) {
+        const logoScale = 0.4;
+        const logoWidth = 550 * logoScale;
+        const logoHeight = 170 * logoScale;
+        const logoX = centerX - logoWidth / 2;
+        const logoY = centerY + 20;
+        
+        ctx.drawImage(fauxLogo, logoX, logoY, logoWidth, logoHeight);
+      }
 
-      // Enhanced match percentage with cooler design
       const boxWidth = 320;
       const boxHeight = 80;
       const boxX = centerX - boxWidth / 2;
-      const boxY = centerY + 80;
+      const boxY = centerY + 110;
 
-      // Gradient background for the box
       const boxGradient = ctx.createLinearGradient(boxX, boxY, boxX + boxWidth, boxY + boxHeight);
       boxGradient.addColorStop(0, "rgba(0, 0, 0, 0.9)");
       boxGradient.addColorStop(1, "rgba(0, 0, 0, 0.7)");
@@ -792,57 +859,54 @@ const generateShareImage = async (band, matchPercentage, token) => {
       ctx.fillStyle = boxGradient;
       ctx.fillRect(boxX, boxY, boxWidth, boxHeight);
       
-      // Glowing border
       ctx.strokeStyle = `rgba(${colors.accent.r}, ${colors.accent.g}, ${colors.accent.b}, 0.9)`;
       ctx.lineWidth = 3;
       ctx.strokeRect(boxX, boxY, boxWidth, boxHeight);
       
-      // Inner glow
       ctx.strokeStyle = `rgba(${colors.accent.r}, ${colors.accent.g}, ${colors.accent.b}, 0.4)`;
       ctx.lineWidth = 1;
       ctx.strokeRect(boxX + 2, boxY + 2, boxWidth - 4, boxHeight - 4);
 
-      ctx.font = "bold 42px Arial, sans-serif";
+      ctx.font = "400 42px 'Anton', sans-serif";
       ctx.fillStyle = "#ffffff";
-      ctx.fillText(`${matchPercentage}% MATCH`, centerX, centerY + 135);
+      ctx.fillText(`${matchPercentage}% MATCH`, centerX, centerY + 165);
 
-      // Bottom text with more personality
       const bottomTexts = [
         "Find your Faux must-see at",
         "Find your fest obsession at",
         "Find your weekend destroyer at",
-        "Find your pit destiny at"
+        "Find your pit destiny at",
+        "Find your Faux chaos at",
+        "Find your must-see mayhem at"
       ];
-
+      
       const selectedBottom = bottomTexts[Math.floor(Math.random() * bottomTexts.length)];
-            
-      ctx.font = "24px Arial, sans-serif";
+      
+      ctx.font = "500 24px 'Oswald', sans-serif";
       ctx.strokeStyle = "rgba(0, 0, 0, 0.9)";
       ctx.lineWidth = 4;
       ctx.strokeText(selectedBottom, canvas.width / 2, canvas.height - 80);
       ctx.fillStyle = "#ffffff";
       ctx.fillText(selectedBottom, canvas.width / 2, canvas.height - 80);
 
-      ctx.font = "bold 38px Arial, sans-serif";
+      ctx.font = "400 38px 'Anton', sans-serif";
       ctx.strokeStyle = "rgba(0, 0, 0, 0.9)";
       ctx.lineWidth = 5;
       ctx.strokeText("dullmace.lol", canvas.width / 2, canvas.height - 35);
       ctx.fillStyle = `rgb(${colors.accent.r}, ${colors.accent.g}, ${colors.accent.b})`;
       ctx.fillText("dullmace.lol", canvas.width / 2, canvas.height - 35);
 
-      // Add some final decorative elements
       ctx.strokeStyle = `rgba(${colors.accent.r}, ${colors.accent.g}, ${colors.accent.b}, 0.6)`;
       ctx.lineWidth = 2;
       
-      // Decorative lines
       ctx.beginPath();
-      ctx.moveTo(centerX - 120, 130);
-      ctx.lineTo(centerX + 120, 130);
+      ctx.moveTo(centerX - 120, 190);
+      ctx.lineTo(centerX + 120, 190);
       ctx.stroke();
       
       ctx.beginPath();
-      ctx.moveTo(centerX - 120, centerY + 180);
-      ctx.lineTo(centerX + 120, centerY + 180);
+      ctx.moveTo(centerX - 120, centerY + 210);
+      ctx.lineTo(centerX + 120, centerY + 210);
       ctx.stroke();
 
       canvas.toBlob(
@@ -949,6 +1013,8 @@ const GenreTags = ({ genres }) => (
 
 const ShareButtons = ({ band, token }) => { 
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
+  const [tweetText, setTweetText] = useState('');
+  const [shareImageBlob, setShareImageBlob] = useState(null);
   const shareUrl = "https://dullmace.lol";
   
   // Random tweet messages
@@ -971,109 +1037,146 @@ const ShareButtons = ({ band, token }) => {
     `Brace yourselves, because I'm about to go full goblin mode for ${band.name} at Faux. Find your destiny: ${shareUrl}`,
     `This weekend, my heart belongs to ${band.name} at Faux. Who's got your heart? Find out: ${shareUrl}`,
     `I'm ready to shed a single tear (or maybe a lot) during ${band.name}'s set at Faux. Find your tear-jerker: ${shareUrl}`,
-    `Forget sleep, I'm running on pure adrenaline and the promise of ${band.name} at Faux. What's fueling you? Discover now: ${shareUrl}`
+    `Forget sleep, I'm running on pure adrenaline and the promise of ${band.name} at Faux. What's fueling you? Discover now: ${shareUrl}`,
+    `My inner monologue demands to see ${band.name} at Faux. Listen to your own inner voice: ${shareUrl}`,
+    `Pretty sure I'm about to get my mind blown (and probably my ears) by ${band.name} at Faux. Who's gonna blow your mind?: ${shareUrl}`,
+    `My Spotify just prescribed me a heavy dose of ${band.name} at Faux. Get your own sonic prescription: ${shareUrl}`,
+    `If you see me aggressively pointing at ${band.name} on stage, mind your business. Find your own reason to point: ${shareUrl}`,
+    `Pretty sure I'm about to achieve peak catharsis during ${band.name}'s set at Faux. Who's gonna save your soul? Find out: ${shareUrl}`,
+    `Pretty sure my entire existence has been leading to ${band.name} at Faux. Find your destiny: ${shareUrl}`
   ];
 
   const getRandomTweetMessage = () => {
     return tweetMessages[Math.floor(Math.random() * tweetMessages.length)];
   };
 
-  const handleShare = async () => {
-    if (isGeneratingImage) return; // Fixed: use correct state variable
-    setIsGeneratingImage(true); // Fixed: use correct setter
+  const generateTweetAndImage = async () => {
+    if (isGeneratingImage) return;
+    setIsGeneratingImage(true);
 
     try {
       const matchPercentage = Math.min(Math.round((band.score / 10) * 100), 100);
-      const shareText = getRandomTweetMessage(); // Fixed: use correct function name
+      const randomTweet = getRandomTweetMessage();
+      setTweetText(randomTweet);
 
-      // We always generate the image first
       const imageBlob = await generateShareImage(band, matchPercentage, token);
-      if (!imageBlob) {
-        throw new Error("Image generation failed.");
-      }
-
-      const fileName = `faux-must-see-${band.name
-        .replace(/[^a-z0-9]/gi, "-")
-        .toLowerCase()}.png`;
-      const shareFile = new File([imageBlob], fileName, { type: "image/png" });
-
-      // --- The Modern Approach: Web Share API ---
-      // This is the best experience for mobile users
-      if (navigator.share && navigator.canShare({ files: [shareFile] })) {
-        await navigator.share({
-          title: "My Faux Must-See",
-          text: shareText,
-          files: [shareFile],
-        });
-      } else {
-        // --- The Desktop/Fallback Approach ---
-        // For browsers that don't support sharing files (like desktop Chrome/Firefox)
-        const url = URL.createObjectURL(imageBlob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = fileName;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-
-        // Open Twitter in a new tab with the pre-filled text
-        const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(
-          shareText,
-        )}`;
-        window.open(twitterUrl, "_blank");
-
-        alert(
-          "Image downloaded! Just drag it into the tweet to share it. 🤘",
-        );
+      if (imageBlob) {
+        setShareImageBlob(imageBlob);
       }
     } catch (error) {
-      console.error("Error during share:", error);
-      // If sharing fails, provide a helpful message.
-      // Avoid falling back to a text-only share here, as it's confusing.
-      // The user clicked a button expecting an image.
-      alert(
-        "Whoops! Something went wrong. Please try copying the link instead.",
-      );
+      console.error("Error generating tweet and image:", error);
     } finally {
-      setIsGeneratingImage(false); // Fixed: use correct setter
+      setIsGeneratingImage(false);
     }
   };
 
-  const handleCopyLink = async () => {
-    const shareText = getRandomTweetMessage(); // Fixed: use correct function name
+  const handleTweet = () => {
+    if (!tweetText) return;
+    const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}`;
+    window.open(twitterUrl, "_blank");
+  };
+
+  const handleSaveImage = () => {
+    if (!shareImageBlob) return;
+    
+    const fileName = `faux-must-see-${band.name
+      .replace(/[^a-z0-9]/gi, "-")
+      .toLowerCase()}.png`;
+    
+    const url = URL.createObjectURL(shareImageBlob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = fileName;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  const handleCopyTweet = async () => {
+    if (!tweetText) return;
     try {
-      await navigator.clipboard.writeText(shareText);
-      alert("Copied to clipboard!");
+      await navigator.clipboard.writeText(tweetText);
+      // You could add a toast notification here
+      alert("Tweet copied to clipboard!");
     } catch (error) {
       console.error("Failed to copy:", error);
-      alert("Failed to copy link. Please try again.");
+      alert("Failed to copy tweet. Please try again.");
     }
   };
 
   return (
-    <div className="share-buttons">
-      <button
-        onClick={handleShare}
-        className="share-button twitter"
-        disabled={isGeneratingImage} // Fixed: use correct state variable
-      >
-        {isGeneratingImage ? ( // Fixed: use correct state variable
-          <>
-            <div className="creating-spinner"></div>
-            Creating...
-          </>
-        ) : (
-          <>
-            <span className="share-icon">🚀</span>
-            Share Result
-          </>
-        )}
-      </button>
-      <button onClick={handleCopyLink} className="share-button native">
-        <span className="share-icon">🔗</span>
-        Copy Link
-      </button>
+    <div className="share-section">
+      {!tweetText ? (
+        <button
+          onClick={generateTweetAndImage}
+          className="generate-share-button"
+          disabled={isGeneratingImage}
+        >
+          {isGeneratingImage ? (
+            <>
+              <div className="creating-spinner"></div>
+              Generating your share...
+            </>
+          ) : (
+            <>
+              <span className="share-icon">✨</span>
+              Generate My Share
+            </>
+          )}
+        </button>
+      ) : (
+        <div className="share-content">
+          <div className="tweet-preview">
+            <div className="tweet-header">
+              <span className="twitter-icon">🐦</span>
+              <span className="tweet-label">Your Tweet</span>
+            </div>
+            <div className="tweet-text">
+              {tweetText}
+            </div>
+            <div className="tweet-actions">
+              <button onClick={handleTweet} className="tweet-button">
+                <span className="tweet-icon">🚀</span>
+                Tweet This
+              </button>
+              <button onClick={handleCopyTweet} className="copy-tweet-button">
+                <span className="copy-icon">📋</span>
+                Copy Text
+              </button>
+            </div>
+          </div>
+
+          <div className="image-instructions">
+            <div className="instruction-header">
+              <span className="image-icon">🖼️</span>
+              <span className="instruction-label">Add Your Share Image</span>
+            </div>
+            <p className="instruction-text">
+              Copy/paste the share image above into your tweet, or save it to your device first.
+            </p>
+            <button 
+              onClick={handleSaveImage} 
+              className="save-image-button"
+              disabled={!shareImageBlob}
+            >
+              <span className="download-icon">💾</span>
+              Save Image
+            </button>
+          </div>
+
+          <button
+            onClick={() => {
+              setTweetText('');
+              setShareImageBlob(null);
+            }}
+            className="regenerate-button"
+          >
+            <span className="refresh-icon">🔄</span>
+            Generate New Tweet
+          </button>
+        </div>
+      )}
     </div>
   );
 };
@@ -1085,6 +1188,7 @@ const TwinCard = ({ band, token }) => {
   const [coverUploadFailed, setCoverUploadFailed] = useState(false);
   const [shareImageUrl, setShareImageUrl] = useState(null);
   const [generatingShareImage, setGeneratingShareImage] = useState(true);
+  const [userProfile, setUserProfile] = useState(null);
 
   if (!band) return null;
 
@@ -1099,11 +1203,29 @@ const TwinCard = ({ band, token }) => {
         reason.charAt(0).toUpperCase() + reason.slice(1).replace(".", "")
     );
 
-  // Generate share image on component mount
+  // Fetch user profile and generate share image on component mount
   useEffect(() => {
-    const generateImage = async () => {
+    const fetchUserAndGenerateImage = async () => {
+      let profile = null;
+      
+      // Fetch user profile if token is available
+      if (token) {
+        try {
+          const userRes = await fetch("https://api.spotify.com/v1/me", {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          if (userRes.ok) {
+            profile = await userRes.json();
+            setUserProfile(profile);
+          }
+        } catch (error) {
+          console.error("Error fetching user profile:", error);
+        }
+      }
+
+      // Generate share image with user profile
       try {
-        const imageBlob = await generateShareImage(band, matchPercentage, token);
+        const imageBlob = await generateShareImage(band, matchPercentage, token, profile);
         if (imageBlob) {
           const imageUrl = URL.createObjectURL(imageBlob);
           setShareImageUrl(imageUrl);
@@ -1115,7 +1237,7 @@ const TwinCard = ({ band, token }) => {
       }
     };
 
-    generateImage();
+    fetchUserAndGenerateImage();
 
     // Cleanup function to revoke object URL
     return () => {
@@ -1137,7 +1259,6 @@ const TwinCard = ({ band, token }) => {
 
       if (url) {
         setPlaylistUrl(url);
-        // Check console for cover upload warnings
         setTimeout(() => {
           if (console.error.toString().includes("Cover upload failed")) {
             setCoverUploadFailed(true);
@@ -1160,14 +1281,17 @@ const TwinCard = ({ band, token }) => {
 
   return (
     <div className="result-card">
-      <div className="match-badge">
-        <span className="match-percentage">{matchPercentage}% Match</span>
+      <div className="card-header">
+        <img
+          src={band.bandImage}
+          alt={`Band photo of ${band.name}`}
+          className="band-image-corner"
+        />
+        <div className="match-badge">
+          <span className="match-percentage">{matchPercentage}% Match</span>
+        </div>
       </div>
-      <img
-        src={band.bandImage}
-        alt={`Band photo of ${band.name}`}
-        className="band-image-thumbnail"
-      />
+      
       <h1 className="band-name">{band.name}</h1>
       <p className="location">{band.bandLocation}</p>
       <GenreTags genres={band.bandGenre} />
