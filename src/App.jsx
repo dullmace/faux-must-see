@@ -627,18 +627,18 @@ const generateShareImage = async (band, matchPercentage, token) => {
         }
       }
 
-      // Load and draw band image with cooler styling
+      // Load and draw band image - MUCH LARGER NOW
       const bandImage = await loadImage(band.bandImage);
       if (bandImage) {
-        const imageSize = 200;
-        const imageX = canvas.width - 240;
+        const imageSize = 280; // Increased from 200
+        const imageX = canvas.width - 180; // Adjusted positioning
         const imageY = 200;
 
         ctx.save();
         
         // Add a glowing effect behind the image
         ctx.shadowColor = `rgba(${colors.accent.r}, ${colors.accent.g}, ${colors.accent.b}, 0.6)`;
-        ctx.shadowBlur = 20;
+        ctx.shadowBlur = 25;
         ctx.shadowOffsetX = 0;
         ctx.shadowOffsetY = 0;
         
@@ -660,19 +660,19 @@ const generateShareImage = async (band, matchPercentage, token) => {
 
         // Add multiple stylish borders
         ctx.strokeStyle = "#ffffff";
-        ctx.lineWidth = 4;
+        ctx.lineWidth = 5;
         ctx.beginPath();
-        ctx.arc(imageX, imageY, imageSize / 2 + 2, 0, Math.PI * 2);
+        ctx.arc(imageX, imageY, imageSize / 2 + 3, 0, Math.PI * 2);
         ctx.stroke();
 
         ctx.strokeStyle = `rgba(${colors.accent.r}, ${colors.accent.g}, ${colors.accent.b}, 0.8)`;
-        ctx.lineWidth = 2;
+        ctx.lineWidth = 3;
         ctx.beginPath();
-        ctx.arc(imageX, imageY, imageSize / 2 + 8, 0, Math.PI * 2);
+        ctx.arc(imageX, imageY, imageSize / 2 + 10, 0, Math.PI * 2);
         ctx.stroke();
       }
 
-      // Enhanced vinyl records with better positioning
+      // Enhanced vinyl records with better positioning (adjusted for larger image)
       const drawVinyl = (x, y, size, opacity, rotation = 0) => {
         ctx.save();
         ctx.globalAlpha = opacity;
@@ -711,25 +711,27 @@ const generateShareImage = async (band, matchPercentage, token) => {
       drawVinyl(canvas.width - 100, canvas.height - 100, 60, 0.5, -0.5);
       drawVinyl(150, canvas.height - 80, 35, 0.4, 1.2);
 
-      const centerX = canvas.width / 2 - 80;
+      const centerX = canvas.width / 2 - 100; // Adjusted for larger image
       const centerY = canvas.height / 2;
 
       ctx.miterLimit = 2;
       ctx.lineJoin = "round";
       ctx.lineCap = "round";
       
-      // Better hype phrases that actually make sense
+      // WAY MORE FUN hype phrases
       const hypeTexts = [
-        "CANCELING ALL PLANS FOR",
-        "FRONT ROW READY FOR",
-        "MY FAUX MUST-SEE:",
-        "DON'T SLEEP ON",
-        "ABOUT TO GO SO HARD FOR",
+        "BOUT TO GO FERAL FOR",
+        "READY TO CRY-SING WITH", 
+        "GOBLIN MODE ACTIVATED FOR",
+        "BONES READY FOR",
+        "EMOTIONAL SUPPORT BAND:",
+        "AGGRESSIVELY SWAYING TO",
+        "HEART BELONGS TO",
+        "RUNNING ON ADRENALINE FOR",
         "GONNA LOSE MY SHIT FOR",
-        "PREPARE FOR SPIRITUAL AWAKENING WITH",
-        "MY SOULMATE IS ACTUALLY",
-        "WARNING: MAY COMBUST DURING",
-        "FUTURE INVOLVES SWEAT AND"
+        "SPIRITUAL AWAKENING WITH",
+        "FULL SEND MODE FOR",
+        "UNHINGED ENERGY FOR"
       ];
       
       const selectedHype = hypeTexts[Math.floor(Math.random() * hypeTexts.length)];
@@ -749,7 +751,7 @@ const generateShareImage = async (band, matchPercentage, token) => {
       ctx.font = "bold 84px Arial, sans-serif";
       let fontSize = 84;
       while (
-        ctx.measureText(band.name.toUpperCase()).width > canvas.width - 450 &&
+        ctx.measureText(band.name.toUpperCase()).width > canvas.width - 500 && // Adjusted for larger image
         fontSize > 36
       ) {
         fontSize -= 4;
@@ -772,7 +774,7 @@ const generateShareImage = async (band, matchPercentage, token) => {
       ctx.font = "28px Arial, sans-serif";
       ctx.strokeStyle = "rgba(0, 0, 0, 0.9)";
       ctx.lineWidth = 4;
-      ctx.strokeText(`AT FAUX 8`, centerX, centerY + 50);
+      ctx.strokeText(`AT FAUX 8}`, centerX, centerY + 50);
       ctx.fillStyle = "#ffffff";
       ctx.fillText(`AT FAUX 8}`, centerX, centerY + 50);
 
@@ -804,13 +806,22 @@ const generateShareImage = async (band, matchPercentage, token) => {
       ctx.fillStyle = "#ffffff";
       ctx.fillText(`${matchPercentage}% MATCH`, centerX, centerY + 135);
 
-      // Bottom text that actually makes sense
+      // Bottom text with more personality
+      const bottomTexts = [
+        "Find your Faux must-see at",
+        "Find your fest obsession at",
+        "Find your weekend destroyer at",
+        "Find your pit destiny at"
+      ];
+
+      const selectedBottom = bottomTexts[Math.floor(Math.random() * bottomTexts.length)];
+            
       ctx.font = "24px Arial, sans-serif";
       ctx.strokeStyle = "rgba(0, 0, 0, 0.9)";
       ctx.lineWidth = 4;
-      ctx.strokeText("Find your Faux must-see at", canvas.width / 2, canvas.height - 80);
+      ctx.strokeText(selectedBottom, canvas.width / 2, canvas.height - 80);
       ctx.fillStyle = "#ffffff";
-      ctx.fillText("Find your Faux must-see at", canvas.width / 2, canvas.height - 80);
+      ctx.fillText(selectedBottom, canvas.width / 2, canvas.height - 80);
 
       ctx.font = "bold 38px Arial, sans-serif";
       ctx.strokeStyle = "rgba(0, 0, 0, 0.9)";
